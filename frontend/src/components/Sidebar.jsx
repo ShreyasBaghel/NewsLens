@@ -2,16 +2,16 @@ import React, { useState } from 'react';
 import { Tag, Filter, ChevronLeft, ChevronRight, Hash, FolderOpen } from 'lucide-react';
 
 export default function Sidebar({ 
-  keywordCounts = {}, 
-  chips = [], 
-  onSelectKeyword, 
+  sourceCounts = {}, 
+  selectedSource = null, 
+  onSelectSource, 
   isOpen, 
   onToggle 
 }) {
   const [filterText, setFilterText] = useState('');
 
-  // 1. Process and sort keywords alphabetically
-  const keywords = Object.entries(keywordCounts)
+  // 1. Process and sort sources alphabetically
+  const keywords = Object.entries(sourceCounts)
     .map(([name, count]) => ({ name, count }))
     .sort((a, b) => a.name.localeCompare(b.name));
 
@@ -69,7 +69,7 @@ export default function Sidebar({
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--color-primary)' }}>
             <FolderOpen size={18} style={{ color: 'var(--color-secondary)' }} />
             <h2 style={{ fontSize: '1.15rem', fontWeight: 700, fontFamily: 'var(--font-title)', margin: 0, color: 'var(--text-primary)' }}>
-              Explore Topics
+              Explore Sources
             </h2>
           </div>
           <button
@@ -117,7 +117,7 @@ export default function Sidebar({
             <Filter size={14} style={{ color: 'var(--text-muted)' }} />
             <input 
               type="text" 
-              placeholder="Filter topics..."
+              placeholder="Filter sources..."
               value={filterText}
               onChange={(e) => setFilterText(e.target.value)}
               style={{
@@ -163,11 +163,11 @@ export default function Sidebar({
                 {/* List of Chips */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
                   {groupings[groupKey].map(kw => {
-                    const isSelected = chips.includes(kw.name);
+                    const isSelected = selectedSource === kw.name;
                     return (
                       <button
                         key={kw.name}
-                        onClick={() => onSelectKeyword(kw.name)}
+                        onClick={() => onSelectSource(kw.name)}
                         style={{
                           display: 'flex',
                           alignItems: 'center',
@@ -224,7 +224,7 @@ export default function Sidebar({
             ))
           ) : (
             <div style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem', padding: '2rem 0', fontStyle: 'italic' }}>
-              No matching topics
+              No matching sources
             </div>
           )}
         </div>
@@ -253,7 +253,7 @@ export default function Sidebar({
             justifyContent: 'center',
             transition: 'var(--transition-bounce)'
           }}
-          title="Expand Topics Sidebar"
+          title="Expand Sources Sidebar"
           onMouseEnter={(e) => {
             e.currentTarget.style.background = 'var(--bg-surface-hover)';
             e.currentTarget.style.color = 'var(--color-primary)';

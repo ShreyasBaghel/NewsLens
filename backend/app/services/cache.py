@@ -382,17 +382,8 @@ def get_all_mysql_cached_articles() -> List[Dict[str, Any]]:
     return articles
 
 def get_all_aggregated_keywords() -> List[str]:
-    """Retrieves all keywords that are currently backed by at least one valid article in the MySQL cache."""
-    valid_articles = get_all_mysql_cached_articles()
-    all_kws = set()
-    for art in valid_articles:
-        kws = art.get("keywords", [])
-        if not isinstance(kws, list):
-            continue
-        for k in kws:
-            if isinstance(k, str) and k.strip():
-                all_kws.add(k.strip())
-    return sorted(list(all_kws))
+    """Retrieves all keywords that are currently backed by at least one valid article in the cache."""
+    return sorted(list(get_global_keyword_counts().keys()))
 
 
 def _get_url_hash(url: str) -> str:

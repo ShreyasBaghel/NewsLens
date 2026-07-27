@@ -11,13 +11,18 @@ async def scheduled_pipeline_run():
     """Trigger the scheduled pipeline run in the background (every 24 hours)."""
     logger.info("Executing scheduled news dashboard refresh...")
     
-    from app.services.metadata import has_refreshed_today
-    from app.services.dataset_manager import dataset_manager
+    from app.services.metadata import is_cache_fresh
+    from app.services.dataset_manager import dataset_manager, snapshot_has_mock_content
     
     active = dataset_manager.get_active_dataset()
     has_articles = bool(active.get("articles"))
+    pinned_articles = active.get("pinned_articles", [])
+    has_mock = snapshot_has_mock_content(pinned_articles)
     
-    if has_refreshed_today() and has_articles:
+    if has_mock:
+        logger.warning("[STARTUP] Cached snapshot contains mock/placeholder content — forcing refresh.")
+
+    if is_cache_fresh() and has_articles and not has_mock:
         logger.info("[STARTUP] Scheduler refresh skipped")
         logger.info("[STARTUP] Using cached dashboard")
         return
@@ -42,17 +47,23 @@ def start_scheduler():
             replace_existing=True
         )
         
-        from app.services.metadata import has_refreshed_today
-        from app.services.dataset_manager import dataset_manager
+        from app.services.metadata import is_cache_fresh
+        from app.services.dataset_manager import dataset_manager, snapshot_has_mock_content
         
         active = dataset_manager.get_active_dataset()
         has_articles = bool(active.get("articles"))
+        pinned_articles = active.get("pinned_articles", [])
+        has_mock = snapshot_has_mock_content(pinned_articles)
         
-        if not has_refreshed_today() or not has_articles:
+        if not is_cache_fresh() or not has_articles or has_mock:
             if not has_articles:
                 logger.warning("[STARTUP] Dashboard snapshot missing or invalid. Starting recovery pipeline...")
+            elif has_mock:
+                # Logging for this handled in scheduled_pipeline_run itself or we can add it here too
+                # Main.py logs it, scheduled_pipeline_run logs it. But start_scheduler schedules it, so let's log it here too if needed, wait, we don't strictly need to log it here if main.py already does, but let's be explicit
+                logger.warning("[STARTUP] Cached snapshot contains mock/placeholder content — forcing initial refresh.")
             else:
-                logger.info("[STARTUP] Refresh hasn't completed today. Running initial refresh...")
+                logger.info("[STARTUP] Cache is stale. Running initial refresh...")
                 
             # Trigger an initial run immediately on startup
             scheduler.add_job(

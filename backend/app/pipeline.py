@@ -149,7 +149,8 @@ async def process_and_validate_candidate(
     stats: Optional[Dict[str, Any]] = None,
     scrape_times: Optional[List[float]] = None,
     relevance_times: Optional[List[float]] = None,
-    summary_times: Optional[List[float]] = None
+    summary_times: Optional[List[float]] = None,
+    active_urls: Optional[set] = None
 ) -> Optional[Dict[str, Any]]:
     """
     Scrapes, validates, and summarizes a candidate article with progressive filtering.
@@ -283,18 +284,19 @@ async def process_and_validate_candidate(
         norm_url_hash = get_hash(normalize_url(url))
         norm_title_hash = get_hash(normalize_title(title))
         
-        if is_hash_seen(norm_url_hash, "url"):
-            logger.info(f"Duplicate skipped\nReason: URL hash\nSource: {art.get('source', 'Unknown')}")
-            stats["duplicate_urls"] += 1
-            return None
-            
-        if is_hash_seen(norm_title_hash, "title"):
-            logger.info(f"Duplicate skipped\nReason: Title hash\nSource: {art.get('source', 'Unknown')}")
-            stats["duplicate_urls"] += 1
-            return None
-            
-        mark_hash_seen(norm_url_hash, "url")
-        mark_hash_seen(norm_title_hash, "title")
+        if active_urls is None or url not in active_urls:
+            if is_hash_seen(norm_url_hash, "url"):
+                logger.info(f"Duplicate skipped\nReason: URL hash\nSource: {art.get('source', 'Unknown')}")
+                stats["duplicate_urls"] += 1
+                return None
+                
+            if is_hash_seen(norm_title_hash, "title"):
+                logger.info(f"Duplicate skipped\nReason: Title hash\nSource: {art.get('source', 'Unknown')}")
+                stats["duplicate_urls"] += 1
+                return None
+                
+            mark_hash_seen(norm_url_hash, "url")
+            mark_hash_seen(norm_title_hash, "title")
 
             
         # 5. Summarize content
@@ -489,13 +491,18 @@ async def _run_pipeline_inner(keyword: Optional[str] = None, force_refresh: bool
                 logger.info(f"Skipping pool candidate '{art.get('title')}' because metadata is detected as non-English.")
                 stats["non_english_metadata"] += 1
             
-    # Filter out already seen general articles (7-day check)
+    # Filter out already seen general articles (7-day check) but keep active ones
+    from app.services.dataset_manager import dataset_manager
+    active_ds = dataset_manager.get_active_dataset()
+    active_urls = {a.get("url") for a in active_ds.get("articles", []) if a.get("url")}
+    active_urls.update({a.get("url") for a in active_ds.get("pinned_articles", []) if a.get("url")})
+    
     unseen_pool_candidates = []
     seen_urls = set()
     for art in pool_candidates:
         url = art.get("url")
         if url and url not in seen_urls:
-            if not is_url_seen(url):
+            if url in active_urls or not is_url_seen(url):
                 unseen_pool_candidates.append(art)
                 seen_urls.add(url)
             else:
@@ -571,7 +578,7 @@ async def _run_pipeline_inner(keyword: Optional[str] = None, force_refresh: bool
                                 stats=stats,
                                 scrape_times=scrape_times,
                                 relevance_times=relevance_times,
-                                summary_times=summary_times
+                                summary_times=summary_times, active_urls=active_urls
                             )
                         )
                         tasks.append(task)
@@ -735,7 +742,7 @@ async def _run_pipeline_inner(keyword: Optional[str] = None, force_refresh: bool
                         val_art = await process_and_validate_candidate(
                             cand, keyword="", is_pinned=True, client=client, semaphore=semaphore,
                             stats=stats, scrape_times=scrape_times, relevance_times=relevance_times,
-                            summary_times=summary_times
+                            summary_times=summary_times, active_urls=active_urls
                         )
                         if val_art:
                             summarized_pinned.append(val_art)
@@ -758,7 +765,7 @@ async def _run_pipeline_inner(keyword: Optional[str] = None, force_refresh: bool
                             val_art = await process_and_validate_candidate(
                                 cand, keyword="", is_pinned=True, client=client, semaphore=semaphore,
                                 stats=stats, scrape_times=scrape_times, relevance_times=relevance_times,
-                                summary_times=summary_times
+                                summary_times=summary_times, active_urls=active_urls
                             )
                             if val_art:
                                 summarized_pinned.append(val_art)

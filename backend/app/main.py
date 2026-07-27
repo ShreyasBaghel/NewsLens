@@ -160,9 +160,8 @@ async def lifespan(app: FastAPI):
     
     logger.info("Pruning stale fallback/placeholder keywords from cache...")
     try:
-        from app.services.cache import cleanup_stale_keywords_in_cache, migrate_caches
+        from app.services.cache import migrate_caches
         migrate_caches()
-        cleanup_stale_keywords_in_cache()
     except Exception as e:
         logger.error(f"Error during startup cache validation: {e}")
     
@@ -177,7 +176,7 @@ async def lifespan(app: FastAPI):
     from app.services.dataset_manager import dataset_manager
     dataset_manager.load_startup_snapshot()
     
-    from app.services.metadata import has_refreshed_today, get_metadata
+    from app.services.metadata import is_cache_fresh, get_metadata
     
     active = dataset_manager.get_active_dataset()
     has_articles = bool(active.get("articles"))
@@ -196,7 +195,14 @@ async def lifespan(app: FastAPI):
     else:
         logger.info("[STARTUP] Pool age: Unknown (missing/invalid)")
 
-    if has_refreshed_today() and has_articles:
+    from app.services.dataset_manager import snapshot_has_mock_content
+    pinned_articles = active.get("pinned_articles", [])
+    has_mock = snapshot_has_mock_content(pinned_articles)
+
+    if has_mock:
+        logger.warning("[STARTUP] Cached snapshot contains mock/placeholder content — forcing refresh.")
+
+    if is_cache_fresh() and has_articles and not has_mock:
         logger.info("[STARTUP] Pool refresh skipped")
         logger.info("[STARTUP] Using cached dashboard")
         
@@ -273,16 +279,7 @@ app.add_middleware(
 async def suggest_keywords(q: str = Query("", description="Prefix search term for autocomplete suggestions")):
     from app.services.cache import get_all_aggregated_keywords
     aggregated_list = get_all_aggregated_keywords()
-    
-    # If the list is empty or has very few items (e.g. startup), merge with old cached list
-    if len(aggregated_list) < 10:
-        fallback_kws = get_cached_keywords()
-        seen = set(aggregated_list)
-        for kw in fallback_kws:
-            if kw not in seen:
-                aggregated_list.append(kw)
-                seen.add(kw)
-                
+
     q_clean = q.lower().strip()
     
     if not q_clean:

@@ -74,6 +74,7 @@ export default function App() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [chips, setChips] = useState([]);
   const [keywordCounts, setKeywordCounts] = useState({});
+  const [selectedSource, setSelectedSource] = useState(null);
   
   // Admin dashboard state
   const [monitoredKeywords, setMonitoredKeywords] = useState([]);
@@ -217,20 +218,16 @@ export default function App() {
     setSearchKeyword('');
     setSearchResults([]);
     setChips([]);
+    setSelectedSource(null);
     setActiveView('feed');
     setVisibleFeedCount(10);
   };
 
-  const handleSelectSidebarTag = (tag) => {
-    if (chips.includes(tag)) {
-      const newChips = chips.filter(c => c !== tag);
-      setChips(newChips);
-      if (newChips.length === 0) handleClear();
-      else handleSearch(newChips.join(','));
+  const handleSelectSidebarSource = (source) => {
+    if (selectedSource === source) {
+      setSelectedSource(null);
     } else {
-      const newChips = [...chips, tag];
-      setChips(newChips);
-      handleSearch(newChips.join(','));
+      setSelectedSource(source);
     }
   };
 
@@ -698,13 +695,22 @@ export default function App() {
       {/* Split layout: Sidebar + Main feed */}
       <div style={{ display: 'flex', gap: sidebarOpen ? '2rem' : '0', width: '100%', alignItems: 'stretch', position: 'relative', flexGrow: 1, minHeight: 0, overflow: 'hidden', transition: 'gap 0.3s cubic-bezier(0.4, 0, 0.2, 1)' }}>
         
-        <Sidebar 
-          keywordCounts={keywordCounts}
-          chips={chips}
-          onSelectKeyword={handleSelectSidebarTag}
-          isOpen={sidebarOpen}
-          onToggle={() => setSidebarOpen(!sidebarOpen)}
-        />
+        {(() => {
+          const sourceCounts = {};
+          [...normalFeed, ...pinnedArticles].forEach(art => {
+            const src = art.source || 'Unknown';
+            sourceCounts[src] = (sourceCounts[src] || 0) + 1;
+          });
+          return (
+            <Sidebar 
+              sourceCounts={sourceCounts}
+              selectedSource={selectedSource}
+              onSelectSource={handleSelectSidebarSource}
+              isOpen={sidebarOpen}
+              onToggle={() => setSidebarOpen(!sidebarOpen)}
+            />
+          );
+        })()}
 
         {/* Main Feed Content Area */}
         <div className="article-scroll-container" style={{ flexGrow: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '2.5rem', overflowY: 'auto', height: '100%', paddingRight: '0.5rem' }}>
@@ -789,7 +795,10 @@ export default function App() {
               
               {/* Feed View */}
               {activeView === 'feed' && (() => {
-                const unfilteredFeed = [...pinnedArticles, ...normalFeed];
+                let unfilteredFeed = [...pinnedArticles, ...normalFeed];
+                if (selectedSource) {
+                  unfilteredFeed = unfilteredFeed.filter(a => (a.source || 'Unknown') === selectedSource);
+                }
                 const combinedFeed = filterText 
                   ? unfilteredFeed.filter(a => 
                       a.title?.toLowerCase().includes(filterText.toLowerCase()) || 
@@ -870,7 +879,10 @@ export default function App() {
 
               {/* Search View */}
               {activeView === 'search' && (() => {
-                const unfilteredSearch = [...pinnedArticles, ...searchResults];
+                let unfilteredSearch = [...pinnedArticles, ...searchResults];
+                if (selectedSource) {
+                  unfilteredSearch = unfilteredSearch.filter(a => (a.source || 'Unknown') === selectedSource);
+                }
                 const combinedSearch = filterText 
                   ? unfilteredSearch.filter(a => 
                       a.title?.toLowerCase().includes(filterText.toLowerCase()) || 

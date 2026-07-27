@@ -17,6 +17,16 @@ DEFAULT_DATASET: Dict[str, Any] = {
     "keyword_counts": {}
 }
 
+def snapshot_has_mock_content(pinned_articles: List[Dict[str, Any]]) -> bool:
+    """Checks whether any article in the snapshot has a URL containing -mock.com."""
+    if not pinned_articles:
+        return False
+    for article in pinned_articles:
+        url = article.get("url", "")
+        if "-mock.com" in url.lower():
+            return True
+    return False
+
 class DatasetManager:
     """
     Manages the global ACTIVE_DATASET in-memory snapshot.
@@ -153,7 +163,9 @@ class StagingDataset:
         
         if self.keyword == "Default Dashboard":
             from app.services.metadata import mark_refreshed
+            from app.services.cache import cleanup_stale_keywords_in_cache
             mark_refreshed()
+            cleanup_stale_keywords_in_cache()
             
         duration = (datetime.datetime.now(datetime.timezone.utc) - t0).total_seconds()
         logger.info(f"[STAGING COMMIT] ACTIVE_DATASET replaced successfully. Refresh duration: {duration:.3f}s.")

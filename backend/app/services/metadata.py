@@ -18,8 +18,9 @@ def set_metadata(key: str, value: str):
             db.add(SystemMetadata(key=key, value=value))
         db.commit()
 
-def has_refreshed_today() -> bool:
-    """Checks if the default pipeline has already completed a refresh today."""
+def is_cache_fresh() -> bool:
+    """Checks if the cached pipeline result is still fresh based on REFRESH_INTERVAL_HOURS."""
+    from app.config import settings
     last_refresh = get_metadata("last_pipeline_run")
     if not last_refresh:
         return False
@@ -27,7 +28,9 @@ def has_refreshed_today() -> bool:
         dt = datetime.fromisoformat(last_refresh)
         if dt.tzinfo is None:
             dt = dt.replace(tzinfo=timezone.utc)
-        return dt.date() == datetime.now(timezone.utc).date()
+        now = datetime.now(timezone.utc)
+        age_hours = (now - dt).total_seconds() / 3600.0
+        return age_hours < settings.REFRESH_INTERVAL_HOURS
     except Exception as e:
         logger.warning(f"Error parsing last_pipeline_run metadata: {e}")
         return False

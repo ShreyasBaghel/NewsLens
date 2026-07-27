@@ -7,66 +7,6 @@ from app.services.cache import get_cached_keywords_for_article, save_cached_keyw
 
 logger = logging.getLogger(__name__)
 
-def generate_semantic_fallback_keywords(title: str, description: str, content: str) -> List[str]:
-    """
-    Extracts proper nouns and noun phrases from the article text as a fallback.
-    Avoids using simple title token split.
-    """
-    from pool.keyword_extractor import extract_capitalized_phrases, extract_noun_phrases, clean_phrase_boundaries
-    
-    text = f"{title}. {description or ''}. {content or ''}"
-    
-    forbidden = {"news", "article", "update", "latest", "report", "today", "technology", "business", "company", "information", "general"}
-    
-    # 1. Extract proper noun phrases (highest quality, contains companies, orgs, locations)
-    cap_phrases = extract_capitalized_phrases(text)
-    from collections import Counter
-    proper_counts = Counter()
-    for p in cap_phrases:
-        p_clean = clean_phrase_boundaries(p)
-        if p_clean and len(p_clean) >= 3:
-            proper_counts[p_clean] += 1
-            
-    # 2. Extract common noun phrases
-    noun_phrases = extract_noun_phrases(text)
-    noun_counts = Counter()
-    for p in noun_phrases:
-        p_clean = clean_phrase_boundaries(p)
-        if p_clean and len(p_clean) >= 3:
-            noun_counts[p_clean] += 1
-            
-    candidates = []
-    seen = set()
-    
-    # Filter candidates to prioritize proper nouns, then noun phrases
-    for phrase, count in proper_counts.most_common():
-        phrase_lower = phrase.lower()
-        if phrase_lower not in seen and phrase_lower not in forbidden:
-            seen.add(phrase_lower)
-            candidates.append(phrase)
-            if len(candidates) >= 3:
-                break
-                
-    if len(candidates) < 3:
-        for phrase, count in noun_counts.most_common():
-            phrase_lower = phrase.lower()
-            if phrase_lower not in seen and phrase_lower not in forbidden:
-                seen.add(phrase_lower)
-                candidates.append(phrase)
-                if len(candidates) >= 3:
-                    break
-                    
-    # Pad with minimal placeholders if we still don't have 3
-    default_fallbacks = ["Manufacturing", "Industrial Technology", "Automation", "AI", "Cement Industry"]
-    for fb in default_fallbacks:
-        if len(candidates) >= 3:
-            break
-        if fb.lower() not in seen:
-            seen.add(fb.lower())
-            candidates.append(fb)
-            
-    return candidates[:3]
-
 async def generate_article_keywords(
     title: str,
     description: str,
@@ -86,23 +26,10 @@ async def generate_article_keywords(
 
     forbidden = {"news", "article", "update", "latest", "report", "today", "technology", "business", "company", "information"}
 
-    # If mock article or empty content, return semantic fallback (never do simple title token split)
+    # If mock article or empty content, return empty list (no keywords)
     if "-mock.com" in url or not content:
-        fallback = generate_semantic_fallback_keywords(title, description, content)
-        
-        # Ensure Manufacturing is present for mock articles to satisfy automated tests
-        if "-mock.com" in url and "Manufacturing" not in fallback:
-            if fallback:
-                fallback[0] = "Manufacturing"
-            else:
-                fallback = ["Manufacturing", "Industrial Technology", "Automation"]
-                
-        logger.info(f"Generated semantic fallback keywords for mock/empty-content article: {url} -> {fallback}")
-        
-        # Save to cache ONLY for mock URLs to preserve automated tests (which require mock caching)
-        if "-mock.com" in url:
-            save_cached_keywords_for_article(url, fallback)
-        return fallback
+        logger.info(f"Skipping keyword generation for mock/empty-content article: {url}")
+        return []
 
     import time
     ollama_endpoint = f"{settings.ollama_url_resolved}/api/generate"
@@ -226,9 +153,8 @@ async def generate_article_keywords(
             f"Exception Type: {type(e).__name__}, Exception Message: {str(e)}"
         )
         
-        fallback = generate_semantic_fallback_keywords(title, description, content)
         logger.info(
-            f"Using semantic fallback keywords. URL: {url}, Title: {title}, "
-            f"Fallback Keywords: {fallback}, Fallback Reason: {type(e).__name__}"
+            f"No fallback keywords generated due to exception. URL: {url}, Title: {title}, "
+            f"Fallback Reason: {type(e).__name__}"
         )
-        return fallback
+        return []
