@@ -7,7 +7,7 @@ logger = logging.getLogger(__name__)
 
 scheduler = AsyncIOScheduler()
 
-async def scheduled_pipeline_run():
+async def scheduled_pipeline_run(trigger_type="Scheduled"):
     """Trigger the scheduled pipeline run in the background (every 24 hours)."""
     logger.info("Executing scheduled news dashboard refresh...")
     
@@ -30,7 +30,7 @@ async def scheduled_pipeline_run():
     logger.info("[STARTUP] Scheduler triggered refresh")
     logger.info("[STARTUP] Running live scraping")
     try:
-        await run_pipeline(keyword=None, force_refresh=True)
+        await run_pipeline(keyword=None, force_refresh=True, trigger_type=trigger_type)
         logger.info("Scheduled news dashboard refresh completed successfully.")
     except Exception as e:
         logger.error(f"Scheduled pipeline run failed: {str(e)}")
@@ -68,6 +68,7 @@ def start_scheduler():
             # Trigger an initial run immediately on startup
             scheduler.add_job(
                 scheduled_pipeline_run,
+                kwargs={'trigger_type': 'Startup'},
                 id='startup_pipeline_job'
             )
         else:

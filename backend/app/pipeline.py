@@ -369,7 +369,41 @@ def _generate_fallback_article(keyword: str, used_urls: set) -> Dict[str, Any]:
         "keywords": [keyword, "smart automation", "industry insights"]
     }
 
-async def run_pipeline(keyword: Optional[str] = None, force_refresh: bool = False) -> Dict[str, Any]:
+import os
+
+def log_demo_run(trigger_type: str, stats: dict, duration: float, error: str = None, next_refresh: str = None, keyword: str = None):
+    try:
+        # Assuming we are in backend/app, logs should be in backend/../logs or backend/logs
+        # Let's use backend/../logs to match "logs/demo_run.log" from root
+        base_path = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        log_dir = os.path.join(base_path, "logs")
+        if not os.path.exists(log_dir):
+            os.makedirs(log_dir, exist_ok=True)
+        log_file = os.path.join(log_dir, "demo_run.log")
+        
+        now_str = datetime.now(timezone.utc).isoformat(timespec='seconds').replace("+00:00", "Z")
+        
+        with open(log_file, "a", encoding="utf-8") as f:
+            f.write(f"[{now_str}] Trigger: {trigger_type} | Keyword: {keyword or 'All'}\n")
+            if error:
+                f.write(f" - STATUS: FAILED ({error})\n")
+            else:
+                f.write(" - STATUS: SUCCESS\n")
+            f.write(f" - Duration: {duration:.2f}s\n")
+            
+            if stats:
+                f.write(f" - Candidates Examined (Sources Queried): {stats.get('candidates_examined', 0)}\n")
+                f.write(f" - Articles Fetched (Scraped): {stats.get('candidates_scraped', 0)}\n")
+                f.write(f" - Duplicates Removed: {stats.get('duplicate_urls', 0)}\n")
+                f.write(f" - Articles Stored/Accepted: {stats.get('accepted_articles', 0)}\n")
+                
+            if next_refresh:
+                f.write(f" - Next Scheduled Refresh: {next_refresh}\n")
+            f.write("-" * 40 + "\n")
+    except Exception as e:
+        logger.warning(f"Failed to write to demo_run.log: {e}")
+
+async def run_pipeline(keyword: Optional[str] = None, force_refresh: bool = False, trigger_type: str = "Manual") -> Dict[str, Any]:
     global pipeline_status
     pipeline_status["status"] = "running"
     pipeline_status["current_keyword"] = keyword or "All Keywords"
@@ -398,7 +432,10 @@ async def run_pipeline(keyword: Optional[str] = None, force_refresh: bool = Fals
     logger.info(f"Running pipeline for keyword: '{db_keyword}' (force_refresh={force_refresh})")
     
     try:
-        return await _run_pipeline_inner(keyword, force_refresh, pipeline_start_time, db_keyword)
+        payload, stats = await _run_pipeline_inner(keyword, force_refresh, pipeline_start_time, db_keyword)
+        duration = time.perf_counter() - pipeline_start_time
+        log_demo_run(trigger_type, stats, duration, error=None, next_refresh=payload.get("next_update"), keyword=keyword)
+        return payload
     except Exception as e:
         logger.error(f"Pipeline execution failed for keyword '{keyword}': {str(e)}. Attempting cache fallback...")
         try:
@@ -413,10 +450,11 @@ async def run_pipeline(keyword: Optional[str] = None, force_refresh: bool = Fals
             logger.error(f"Cache fallback lookup failed: {str(cache_err)}")
             
         pipeline_status["status"] = "failed"
-        pipeline_status["message"] = f"Pipeline failed: {str(e)}"
+        duration = time.perf_counter() - pipeline_start_time
+        log_demo_run(trigger_type, None, duration, error=str(e), keyword=keyword)
         raise e
 
-async def _run_pipeline_inner(keyword: Optional[str] = None, force_refresh: bool = False, pipeline_start_time: float = 0.0, db_keyword: str = "") -> Dict[str, Any]:
+async def _run_pipeline_inner(keyword: Optional[str] = None, force_refresh: bool = False, pipeline_start_time: float = 0.0, db_keyword: str = "") -> tuple[Dict[str, Any], dict]:
     global pipeline_status
     
     # Initialize Rejection Stats and Timings
@@ -930,4 +968,4 @@ async def _run_pipeline_inner(keyword: Optional[str] = None, force_refresh: bool
     pipeline_status["progress"] = 100
     pipeline_status["message"] = "Pipeline execution completed successfully."
     
-    return payload
+    return payload, stats

@@ -1,50 +1,58 @@
 [
     {
         "keyword": "Artificial Intelligence",
-        "is_processed": false
+        "is_processed": true
     },
     {
         "keyword": "Cybersecurity",
-        "is_processed": false
+        "is_processed": true
     },
     {
         "keyword": "Robotics",
-        "is_processed": false
+        "is_processed": true
     },
     {
         "keyword": "Cloud Computing",
-        "is_processed": false
+        "is_processed": true
     },
     {
         "keyword": "Quantum Computing",
-        "is_processed": false
+        "is_processed": true
     },
     {
         "keyword": "Dalmia Cement",
-        "is_processed": false
+        "is_processed": true
     },
     {
         "keyword": "Manufacturing",
-        "is_processed": false
+        "is_processed": true
     },
     {
         "keyword": "Cement Industry",
-        "is_processed": false
+        "is_processed": true
     },
     {
         "keyword": "India",
-        "is_processed": false
+        "is_processed": true
     },
     {
         "keyword": "USA",
-        "is_processed": false
+        "is_processed": true
     },
     {
         "keyword": "digitization",
-        "is_processed": false
+        "is_processed": true
     },
     {
         "keyword": "information",
-        "is_processed": false
+        "is_processed": true
+    },
+    {
+        "keyword": "dalmia",
+        "is_processed": true
+    },
+    {
+        "keyword": "bharat",
+        "is_processed": true
     }
 ]

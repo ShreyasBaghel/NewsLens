@@ -347,7 +347,7 @@ export default function App() {
               />
               <button
                 onClick={handleAddKeyword}
-                disabled={isAddingKeyword || !newKeywordInput.trim()}
+                disabled={isAddingKeyword || !newKeywordInput.trim() || isLoading || isRefreshing || pipelineRunStatus.status === 'running'}
                 style={{
                   background: 'var(--gradient-tech)',
                   color: '#ffffff',
@@ -412,7 +412,7 @@ export default function App() {
               <span style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-primary)' }}>Run Pipeline for New Keywords Only</span>
               <button
                 onClick={handleTriggerIncrementalPipeline}
-                disabled={pipelineRunStatus.status === 'running'}
+                disabled={pipelineRunStatus.status === 'running' || isLoading || isRefreshing}
                 style={{
                   background: 'var(--gradient-tech)',
                   color: '#ffffff',
@@ -450,7 +450,7 @@ export default function App() {
               <span style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-primary)' }}>Run Full Pipeline</span>
               <button
                 onClick={handleTriggerPipeline}
-                disabled={pipelineRunStatus.status === 'running'}
+                disabled={pipelineRunStatus.status === 'running' || isLoading || isRefreshing}
                 style={{
                   background: 'var(--gradient-tech)',
                   color: '#ffffff',
@@ -815,9 +815,14 @@ export default function App() {
                       <h2 style={{ fontSize: '1.25rem', fontFamily: 'var(--font-title)' }}>
                         General Manufacturing & Industry Feed
                       </h2>
-                      <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginLeft: 'auto' }}>
-                        Showing {combinedFeed.length} summarized articles
-                      </span>
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', marginLeft: 'auto' }}>
+                        <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                          Showing {combinedFeed.length} articles
+                        </span>
+                        <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontStyle: 'italic', opacity: 0.8 }}>
+                          Articles are deduplicated over the previous 7 days.
+                        </span>
+                      </div>
                     </div>
 
                     {combinedFeed.length > 0 ? (
@@ -900,9 +905,14 @@ export default function App() {
                         {searchKeyword ? `Topic Intelligence: "${searchKeyword}"` : 'Search Results'}
                       </h2>
                       {searchKeyword && (
-                        <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginLeft: 'auto' }}>
-                          Showing {combinedSearch.length} summarized articles
-                        </span>
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', marginLeft: 'auto' }}>
+                          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                            Showing {combinedSearch.length} articles
+                          </span>
+                          <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontStyle: 'italic', opacity: 0.8 }}>
+                            Articles are deduplicated over the previous 7 days.
+                          </span>
+                        </div>
                       )}
                     </div>
 
