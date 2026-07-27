@@ -12,7 +12,7 @@ from app.scheduler import start_scheduler, shutdown_scheduler
 from app.pipeline import run_pipeline
 from app.models import DashboardPayload, RefreshRequest, Article
 
-from pool.article_pool_fetcher import ensure_fresh_pool_on_startup
+from pool.article_pool_fetcher import ensure_fresh_pool_on_startup, get_pool_age_hours
 from pool.keyword_extractor import load_keywords_cache, get_cached_keywords
 from app.services.pinned_store import load_pinned_articles, pin_article, unpin_article
 
@@ -143,15 +143,14 @@ async def validate_ollama_config() -> bool:
                     
             if not model_installed:
                 error_msg = f"Ollama model '{model}' is NOT installed. Installed models: {list(set(installed_model_names))}."
-                logger.error(error_msg)
-                raise RuntimeError(error_msg)
+                logger.warning(error_msg)
+                return False
                 
             logger.info(f"Ollama model '{model}' successfully validated on startup.")
             return True
     except Exception as e:
-        error_msg = f"Ollama startup validation failed: {str(e)}"
-        logger.error(error_msg)
-        raise RuntimeError(error_msg)
+        logger.warning(f"Ollama is unreachable: {e}. LLM features will be disabled.")
+        return False
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -174,30 +173,76 @@ async def lifespan(app: FastAPI):
         logger.error(f"Error during startup Ollama validation: {e}")
         raise e
     
-    logger.info("Ensuring fresh article pool on startup...")
-    topics = [
-        "Dalmia Cement",
-        "AI",
-        "machine learning",
-        "robotics & automation",
-        "manufacturing",
-        "cement industry"
-    ]
-    try:
-        await ensure_fresh_pool_on_startup(topics, max_age_hours=0)
-        load_keywords_cache()
-        from app.services.cache import build_in_memory_index
-        build_in_memory_index()
-        from app.services.cache import get_all_aggregated_keywords, get_global_keyword_counts
-        agg = get_all_aggregated_keywords()
-        kw_counts = get_global_keyword_counts()
-        logger.info(f"[STARTUP] Total unique keywords available: {len(agg)} from article_keywords table, {len(kw_counts)} from cache.json.")
-    except Exception as e:
-        logger.error(f"Failed to ensure fresh pool on startup: {str(e)}")
-    
     logger.info("Loading ACTIVE_DATASET snapshot from database authoritative store...")
     from app.services.dataset_manager import dataset_manager
     dataset_manager.load_startup_snapshot()
+    
+    from app.services.metadata import has_refreshed_today, get_metadata
+    
+    active = dataset_manager.get_active_dataset()
+    has_articles = bool(active.get("articles"))
+    
+    last_refresh = get_metadata("last_pipeline_run")
+    
+    if has_articles:
+        logger.info("[STARTUP] Dashboard loaded from MySQL")
+        
+    logger.info(f"[STARTUP] Last refresh: {last_refresh or 'Never'}")
+    logger.info(f"[STARTUP] Refresh interval: {settings.REFRESH_INTERVAL_HOURS} hours")
+    
+    pool_age = get_pool_age_hours()
+    if pool_age is not None:
+        logger.info(f"[STARTUP] Pool age: {pool_age:.2f} hours")
+    else:
+        logger.info("[STARTUP] Pool age: Unknown (missing/invalid)")
+
+    if has_refreshed_today() and has_articles:
+        logger.info("[STARTUP] Pool refresh skipped")
+        logger.info("[STARTUP] Using cached dashboard")
+        
+        try:
+            load_keywords_cache()
+            from app.services.cache import build_in_memory_index
+            build_in_memory_index()
+            from app.services.cache import get_all_aggregated_keywords, get_global_keyword_counts
+            agg = get_all_aggregated_keywords()
+            kw_counts = get_global_keyword_counts()
+            logger.info(f"[STARTUP] Total unique keywords available: {len(agg)} from article_keywords table, {len(kw_counts)} from cache.json.")
+        except Exception as e:
+            logger.error(f"Failed to load caches on startup: {str(e)}")
+    else:
+        logger.info("[STARTUP] Pool refresh required")
+        logger.info("Ensuring fresh article pool on startup...")
+        
+        topics = [
+            "Dalmia Cement",
+            "AI",
+            "machine learning",
+            "robotics & automation",
+            "manufacturing",
+            "cement industry"
+        ]
+        
+        try:
+            from app.services.monitored_keywords import load_monitored_keywords
+            admin_kws = load_monitored_keywords()
+            merged_topics = []
+            seen_topics = set()
+            for t in topics + admin_kws:
+                if t.lower() not in seen_topics:
+                    merged_topics.append(t)
+                    seen_topics.add(t.lower())
+                    
+            await ensure_fresh_pool_on_startup(merged_topics, max_age_hours=settings.REFRESH_INTERVAL_HOURS)
+            load_keywords_cache()
+            from app.services.cache import build_in_memory_index
+            build_in_memory_index()
+            from app.services.cache import get_all_aggregated_keywords, get_global_keyword_counts
+            agg = get_all_aggregated_keywords()
+            kw_counts = get_global_keyword_counts()
+            logger.info(f"[STARTUP] Total unique keywords available: {len(agg)} from article_keywords table, {len(kw_counts)} from cache.json.")
+        except Exception as e:
+            logger.error(f"Failed to ensure fresh pool on startup: {str(e)}")
 
     logger.info("Starting background scheduler...")
     start_scheduler()
@@ -275,9 +320,10 @@ def get_news_from_cache_or_default(keyword: Optional[str]) -> dict:
     matching_articles = []
     for art in active_dataset.get("articles", []):
         matched = False
-        title_norm = normalize_text_for_matching(art.get("title", ""))
-        summary_norm = normalize_text_for_matching(art.get("summary", ""))
-        tags_norm = [normalize_text_for_matching(tag) for tag in art.get("keywords", [])]
+        art_dict = art if isinstance(art, dict) else art.dict()
+        title_norm = normalize_text_for_matching(art_dict.get("title", ""))
+        summary_norm = normalize_text_for_matching(art_dict.get("summary", ""))
+        tags_norm = [normalize_text_for_matching(tag) for tag in art_dict.get("keywords", [])]
         
         for kw_norm in keywords_norm:
             if kw_norm in tags_norm or (kw_norm and (kw_norm in title_norm or kw_norm in summary_norm)):
@@ -322,6 +368,8 @@ async def get_news(keyword: str = Query(None, description="Search keyword or top
         return overlay_pinned_articles(payload)
     except Exception as e:
         logger.error(f"Error in GET /api/news: {str(e)}")
+        import traceback
+        logger.error(traceback.format_exc())
         raise HTTPException(status_code=500, detail=f"Cache retrieval error: {str(e)}")
 
 @app.post("/api/news/refresh", response_model=DashboardPayload)
@@ -428,6 +476,62 @@ async def delete_monitored_keyword_endpoint(
         
     save_monitored_keywords(updated_kws)
     return {"message": f"Keyword '{keyword_to_remove}' removed successfully.", "keywords": updated_kws}
+
+@app.post("/api/admin/pipeline/trigger")
+async def trigger_pipeline(request: RefreshRequest, x_user_role: Optional[str] = Header(None)):
+    """
+    Triggers the pipeline asynchronously in the background. (Admin only)
+    """
+    await verify_admin_role(x_user_role)
+    from app.pipeline import pipeline_status
+    if pipeline_status["status"] == "running":
+        raise HTTPException(status_code=400, detail="Pipeline is already running")
+    import asyncio
+    asyncio.create_task(run_pipeline(keyword=request.keyword, force_refresh=True))
+    return {"message": "Pipeline triggered successfully"}
+
+@app.get("/health")
+async def health_check():
+    import time
+    from app.database import engine
+    from app.services.dataset_manager import dataset_manager
+    from app.scheduler import scheduler
+    
+    # Check DB
+    db_status = "disconnected"
+    try:
+        with engine.connect() as conn:
+            db_status = "connected"
+    except Exception:
+        pass
+        
+    # Check Cache
+    ds = dataset_manager.get_active_dataset()
+    cache_status = "ready" if isinstance(ds, dict) and "articles" in ds else "unavailable"
+    
+    # Check Scheduler
+    scheduler_status = "running" if scheduler and scheduler.running else "stopped"
+    
+    # Try simple Ollama check
+    ollama_status = "available"
+    try:
+        import httpx
+        url = f"{settings.ollama_url_resolved}/api/tags"
+        with httpx.Client(timeout=1.0) as client:
+            resp = client.get(url)
+            if resp.status_code != 200:
+                ollama_status = "unavailable"
+    except Exception:
+        ollama_status = "unavailable"
+        
+    return {
+        "status": "healthy" if db_status == "connected" else "degraded",
+        "database": db_status,
+        "cache": cache_status,
+        "scheduler": scheduler_status,
+        "ollama": ollama_status,
+        "uptime": "running"
+    }
 
 @app.post("/api/admin/pipeline/run")
 async def run_pipeline_endpoint(

@@ -34,6 +34,11 @@ class DatasetManager:
 
     def replace_active_dataset(self, new_dataset: Dict[str, Any]):
         """Atomically replaces the ACTIVE_DATASET reference in a thread-safe manner."""
+        required_keys = ["keyword", "articles", "pinned_articles", "last_updated", "next_update", "keyword_counts"]
+        if not all(k in new_dataset for k in required_keys):
+            logger.error(f"[DATASET VALIDATION] Malformed dataset, missing keys. Falling back to DEFAULT_DATASET.")
+            new_dataset = DEFAULT_DATASET
+            
         with self._lock:
             self._active_dataset = dict(new_dataset)
         logger.info("[ACTIVE_DATASET] Snapshot atomically replaced in memory.")
@@ -45,32 +50,27 @@ class DatasetManager:
         """
         logger.info("[STARTUP] Loading ACTIVE_DATASET snapshot from database authoritative store...")
         try:
-            from app.services.cache import get_cached_results, search_cache_by_keyword, get_global_keyword_counts
+            from app.services.cache import get_cached_results, get_global_keyword_counts
             
             # Try to load cached pipeline result for default_dashboard
             cached = get_cached_results("default_dashboard")
-            if cached and isinstance(cached, dict) and cached.get("articles"):
-                cached["keyword_counts"] = get_global_keyword_counts()
-                self.replace_active_dataset(cached)
-                logger.info(f"[STARTUP] Successfully loaded snapshot from database with {len(cached.get('articles', []))} articles.")
-                return
+            if cached and isinstance(cached, dict):
+                articles = cached.get("articles", [])
+                keyword = cached.get("keyword", "")
+                
+                # Validate dashboard cache
+                if isinstance(articles, list) and len(articles) > 0 and "test" not in keyword.lower() and "dummy" not in keyword.lower():
+                    cached["keyword_counts"] = get_global_keyword_counts()
+                    self.replace_active_dataset(cached)
+                    logger.info("[STARTUP] Dashboard snapshot found.")
+                    logger.info(f"[STARTUP] Loading {len(articles)} cached articles.")
+                    return
+                else:
+                    logger.warning("[STARTUP] Dashboard snapshot is invalid or contains test data. Treating as missing.")
 
-            # Fallback to loading all articles from database search cache
-            matching = search_cache_by_keyword(None)
-            global_kws = get_global_keyword_counts()
-            now_str = datetime.datetime.now(datetime.timezone.utc).isoformat().replace("+00:00", "Z")
-            next_str = (datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(hours=settings.REFRESH_INTERVAL_HOURS)).isoformat().replace("+00:00", "Z")
+            logger.info("[STARTUP] Dashboard snapshot missing.")
+            self.replace_active_dataset(DEFAULT_DATASET)
             
-            payload = {
-                "keyword": "Default Dashboard",
-                "articles": matching,
-                "pinned_articles": [],
-                "last_updated": now_str,
-                "next_update": next_str,
-                "keyword_counts": global_kws
-            }
-            self.replace_active_dataset(payload)
-            logger.info(f"[STARTUP] Loaded fallback snapshot from database with {len(matching)} articles.")
         except Exception as e:
             logger.error(f"[STARTUP] Failed to load startup snapshot from database: {e}\n{traceback.format_exc()}")
             # Maintain default empty dataset state
@@ -150,6 +150,11 @@ class StagingDataset:
 
         # 6. Verify success & 7. Replace ACTIVE_DATASET
         dataset_manager.replace_active_dataset(payload)
+        
+        if self.keyword == "Default Dashboard":
+            from app.services.metadata import mark_refreshed
+            mark_refreshed()
+            
         duration = (datetime.datetime.now(datetime.timezone.utc) - t0).total_seconds()
         logger.info(f"[STAGING COMMIT] ACTIVE_DATASET replaced successfully. Refresh duration: {duration:.3f}s.")
         return payload

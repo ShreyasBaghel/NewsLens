@@ -282,7 +282,7 @@ def get_cached_keywords_for_article(url: str) -> Optional[List[str]]:
 
 
 def save_cached_keywords_for_article(url: str, keywords: List[str]):
-    save_keywords_for_article(url, keywords)
+    save_smart_cached_tags(url, keywords)
 
 
 def get_smart_cached_tags(url: str, current_title: str, current_summary: str) -> Optional[List[str]]:
@@ -309,7 +309,21 @@ def get_smart_cached_tags(url: str, current_title: str, current_summary: str) ->
 
 
 def save_smart_cached_tags(url: str, keywords: List[str], title: str = "", summary: str = ""):
-    save_keywords_for_article(url, keywords, title, summary)
+    with SessionLocal() as db:
+        entry = db.query(ArticleKeyword).filter(ArticleKeyword.url == url.strip()).first()
+        if entry:
+            entry.keywords = json.dumps(keywords)
+            entry.title = title
+            entry.summary = summary
+        else:
+            entry = ArticleKeyword(
+                url=url.strip(),
+                keywords=json.dumps(keywords),
+                title=title,
+                summary=summary
+            )
+            db.add(entry)
+        db.commit()
 
 
 def cleanup_stale_keywords_in_cache():
@@ -348,19 +362,37 @@ def cleanup_stale_keywords_in_cache():
         logger.error(f"Error during database keywords cache pruning: {e}")
 
 
-def get_all_aggregated_keywords() -> List[str]:
+def get_all_mysql_cached_articles() -> List[Dict[str, Any]]:
+    """Retrieves all articles from CachedPipelineResult payloads for fallback and keyword generation."""
+    articles = []
+    seen_urls = set()
     with SessionLocal() as db:
-        rows = db.query(ArticleKeyword).all()
-        all_kws = set()
-        for r in rows:
+        results = db.query(CachedPipelineResult).all()
+        for r in results:
             try:
-                kws = json.loads(r.keywords)
-                for k in kws:
-                    if k.strip():
-                        all_kws.add(k.strip())
+                payload = json.loads(r.payload)
+                if isinstance(payload, dict) and "articles" in payload:
+                    for art in payload["articles"]:
+                        url = art.get("url")
+                        if url and url not in seen_urls:
+                            articles.append(art)
+                            seen_urls.add(url)
             except Exception:
                 pass
-        return sorted(list(all_kws))
+    return articles
+
+def get_all_aggregated_keywords() -> List[str]:
+    """Retrieves all keywords that are currently backed by at least one valid article in the MySQL cache."""
+    valid_articles = get_all_mysql_cached_articles()
+    all_kws = set()
+    for art in valid_articles:
+        kws = art.get("keywords", [])
+        if not isinstance(kws, list):
+            continue
+        for k in kws:
+            if isinstance(k, str) and k.strip():
+                all_kws.add(k.strip())
+    return sorted(list(all_kws))
 
 
 def _get_url_hash(url: str) -> str:
@@ -623,16 +655,16 @@ def get_hash(content: str) -> str:
         return ""
     return hashlib.sha256(content.encode('utf-8')).hexdigest()
 
-def is_hash_seen(url_hash: str) -> bool:
+def is_hash_seen(hash_value: str, hash_type: str = "url") -> bool:
     with SessionLocal() as db:
-        return db.query(SeenArticleHash).filter(SeenArticleHash.url_hash == url_hash).first() is not None
+        return db.query(SeenArticleHash).filter(SeenArticleHash.hash_value == hash_value, SeenArticleHash.hash_type == hash_type).first() is not None
 
 
-def mark_hash_seen(url_hash: str):
+def mark_hash_seen(hash_value: str, hash_type: str = "url"):
     with SessionLocal() as db:
-        existing = db.query(SeenArticleHash).filter(SeenArticleHash.url_hash == url_hash).first()
+        existing = db.query(SeenArticleHash).filter(SeenArticleHash.hash_value == hash_value, SeenArticleHash.hash_type == hash_type).first()
         if not existing:
-            db.add(SeenArticleHash(url_hash=url_hash))
+            db.add(SeenArticleHash(hash_value=hash_value, hash_type=hash_type))
             try:
                 db.commit()
             except Exception as e:

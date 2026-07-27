@@ -674,6 +674,36 @@ async def _run_pipeline_inner(keyword: Optional[str] = None, force_refresh: bool
                                 
                     page += 1
         
+            # 4.5. Fallback to previously stored MySQL articles for shortfall
+            if len(summarized_articles) < TARGET_ARTICLE_COUNT:
+                shortfall = TARGET_ARTICLE_COUNT - len(summarized_articles)
+                logger.info(f"Shortfall persistent after live fallback. Backfilling {shortfall} articles from MySQL cache.")
+                from app.services.cache import get_all_mysql_cached_articles
+                cached_arts = get_all_mysql_cached_articles()
+                
+                # Sort cached articles to prioritize most recent and relevant
+                def sort_key(art):
+                    score = art.get("validation_relevance_score") or art.get("relevance_score", 0.0)
+                    if not isinstance(score, (int, float)):
+                        score = 0.0
+                    pub = art.get("published_at", "")
+                    return (score, pub)
+                    
+                cached_arts = sorted(cached_arts, key=sort_key, reverse=True)
+                
+                for art in cached_arts:
+                    if len(summarized_articles) >= TARGET_ARTICLE_COUNT:
+                        break
+                    url = art.get("url")
+                    if url and url not in used_urls:
+                        summarized_articles.append(art)
+                        used_urls.add(url)
+                        domain = getNormalizedDomain(url)
+                        if domain:
+                            used_domains.add(domain)
+                        add_seen_url(url, title=art.get("title"), published_at=art.get("published_at"))
+                        stats["accepted_articles"] += 1
+
             # 5. Last Resort Fallback (if we still have less than TARGET_ARTICLE_COUNT, backfill with mock articles)
             while len(summarized_articles) < TARGET_ARTICLE_COUNT:
                 shortfall = TARGET_ARTICLE_COUNT - len(summarized_articles)
@@ -844,7 +874,7 @@ async def _run_pipeline_inner(keyword: Optional[str] = None, force_refresh: bool
             url=url
         )
         art["keywords"] = validate_and_clean_tags(
-            raw_tags=raw_keywords,
+            tags=raw_keywords,
             title=title,
             summary=summary,
             content=content,

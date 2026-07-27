@@ -34,5 +34,17 @@
     {
         "keyword": "India",
         "is_processed": false
+    },
+    {
+        "keyword": "USA",
+        "is_processed": false
+    },
+    {
+        "keyword": "digitization",
+        "is_processed": false
+    },
+    {
+        "keyword": "information",
+        "is_processed": false
     }
 ]

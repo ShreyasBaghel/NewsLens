@@ -696,7 +696,7 @@ export default function App() {
       )}
 
       {/* Split layout: Sidebar + Main feed */}
-      <div style={{ display: 'flex', gap: '2rem', width: '100%', alignItems: 'stretch', position: 'relative', flexGrow: 1, minHeight: 0, overflow: 'hidden' }}>
+      <div style={{ display: 'flex', gap: sidebarOpen ? '2rem' : '0', width: '100%', alignItems: 'stretch', position: 'relative', flexGrow: 1, minHeight: 0, overflow: 'hidden', transition: 'gap 0.3s cubic-bezier(0.4, 0, 0.2, 1)' }}>
         
         <Sidebar 
           keywordCounts={keywordCounts}

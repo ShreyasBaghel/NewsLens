@@ -1,34 +1,152 @@
 [
     {
-        "title": "Nobel laureates among more than 200 experts urging action on AI's economic impact",
-        "url": "https://economictimes.indiatimes.com/tech/artificial-intelligence/nobel-laureates-among-more-than-200-experts-urging-action-on-ais-economic-impact/articleshow/132379695.cms",
-        "canonical_url": "https://m.economictimes.com/tech/artificial-intelligence/nobel-laureates-among-more-than-200-experts-urging-action-on-ais-economic-impact/articleshow/132379695.cms",
-        "source": "The Times of India",
-        "published_at": "2026-07-14T02:57:12Z",
-        "summary": "Nobel laureates, alongside over 200 experts, have called for urgent measures to address AI's profound economic impact. They warn that the transformation could surpass even the Industrial Revolution in speed and scale.",
-        "scraped_content": "Business NewsTechAI Nobel laureates among more than 200 experts urging action on AI's economic impact ReutersLast Updated: Jul 14, 2026, 08:27:12 AM IST They issued \u200cthe jointly \u2060signed \u2060statement on Monday, warning that AI could drive a larger \u200beconomic transformation than the Industrial Revolution but one that is \"vastly \u200bshorter\" in time frame, raising questions for workers, companies and public institutions. Listen to this article in summarized format Add as a Reliable and Trusted News Source AI economic impactAI policy developmentjob displacement due to AIexperts on AINobel laureates and AI (Catch all the Technology News News, and Latest News Updates on The Economic Times.) Elevate your knowledge and leadership skills at a cost cheaper than your daily tea.",
+        "title": "Samsung Electronics wins $200 billion Broadcom AI chip partnership, boosting foundry push",
+        "url": "https://www.livemint.com/companies/news/samsung-electronics-wins-200-billion-broadcom-ai-chip-partnership-boosting-foundry-push-11784984023960.html",
+        "canonical_url": "https://www.livemint.com/companies/news/samsung-electronics-wins-200-billion-broadcom-ai-chip-partnership-boosting-foundry-push-11784984023960.html",
+        "source": "Livemint",
+        "published_at": "2026-07-25T13:00:10Z",
+        "summary": "SEOUL, July 25 (Reuters) - Samsung Electronics said on Saturday it struck a pact with U. S. chip designer Broadcom to widen cooperation across memory chips, contract chip making and advanced packaging envisaged to exceed $200 billion until 2030.",
+        "scraped_content": "SEOUL, July 25 (Reuters) - Samsung Electronics said on Saturday it struck a pact with U.S. chip designer Broadcom to widen cooperation across memory chips, contract chip making and advanced packaging envisaged to exceed $200 billion until 2030. Winning long-term production commitments from Broadcom, one of the world's leading custom AI chip designers, could boost utilisation at Samsung's advanced manufacturing facilities to pull ahead in the race to supply AI chips. \"The expanded collaboration ... reflects Samsung's focus on supporting customers with end-to-end semiconductor technologies across an increasingly diverse range of AI and high-performance computing applications,\" the company said in a statement. The tie-up comes as global technology companies increasingly develop their own custom AI accelerators, rather than relying solely on general-purpose graphics processors, driving demand for specialised chip design and manufacturing partnerships. The two firms' memorandum of understanding underscores Samsung's efforts to beef up its position in AI semiconductors by expanding its long-term ties with Broadcom amid growing demand up for custom AI processors. The next five years of collaboration will combine Broadcom's expertise in designing application-specific integrated circuits (ASICs), or chips for specific tasks, with Samsung's manufacturing capabilities. The deal provides for Broadcom's next-generation communications chips, designed for high-speed data transfer, to be made with Samsung's sub-2-nanometre process technology, Samsung said. The two will also collaborate on next-generation high-bandwidth memory (HBM) products.",
+        "keyword": "NVIDIA",
+        "is_pinned": true,
+        "company": "NVIDIA",
+        "validation_relevance_score": 40.0,
+        "keywords": [
+            "Manufacturing"
+        ],
+        "relevance_score": 0.792,
+        "executive_summary": "This article discusses key industrial developments and technological advancements in the sector.",
+        "business_implications": [
+            "Provides insights into operational improvements and potential efficiency gains.",
+            "Highlights automation and digital transformation opportunities.",
+            "Illustrates market dynamics and competitor strategies in the industry."
+        ],
+        "ai_relevance": "Not AI-focused",
+        "industry_categories": [
+            "Manufacturing"
+        ],
+        "innovation_score": 50,
+        "sentiment": "Neutral"
+    },
+    {
+        "title": "NVIDIA Blackwell B200 GPUs Enter Full Production for Enterprise AI Cloud Scale",
+        "url": "https://www.nvidiapinned-mock.com/blackwell-b200-production",
+        "canonical_url": null,
+        "source": "Hardware Horizon",
+        "published_at": "2026-06-29T08:00:00Z",
+        "summary": "This is a detailed mock report regarding 'NVIDIA Blackwell B200 GPUs Enter Full Production for Enterprise AI Cloud Scale'. The current developments in the industry highlight rapid progress and emerging trends across multiple sectors.",
+        "scraped_content": "This is a detailed mock report regarding 'NVIDIA Blackwell B200 GPUs Enter Full Production for Enterprise AI Cloud Scale'. The current developments in the industry highlight rapid progress and emerging trends across multiple sectors. Companies are actively investing in new solutions to optimize their operations, reduce carbon emissions, and improve productivity.\n\nKey stakeholders are emphasizing the integration of smart automation technologies to streamline workflows. These initiatives are expected to yield significant cost savings and enhance manufacturing performance over the next decade.",
+        "keyword": "NVIDIA",
+        "is_pinned": true,
+        "company": "NVIDIA",
+        "validation_relevance_score": 80.0,
+        "keywords": [
+            "Automation",
+            "Manufacturing"
+        ],
+        "relevance_score": 2.835,
+        "executive_summary": "This article discusses key industrial developments and technological advancements in the sector.",
+        "business_implications": [
+            "Provides insights into operational improvements and potential efficiency gains.",
+            "Highlights automation and digital transformation opportunities.",
+            "Illustrates market dynamics and competitor strategies in the industry."
+        ],
+        "ai_relevance": "Not AI-focused",
+        "industry_categories": [
+            "Manufacturing"
+        ],
+        "innovation_score": 50,
+        "sentiment": "Neutral"
+    },
+    {
+        "title": "Microsoft Announces Copilot Studio V2 with Advanced Multi-Agent Orchestration",
+        "url": "https://www.microsoftpinned-mock.com/copilot-studio-v2-agents",
+        "canonical_url": null,
+        "source": "Redmond Inside",
+        "published_at": "2026-06-29T09:15:00Z",
+        "summary": "This is a detailed mock report regarding 'Microsoft Announces Copilot Studio V2 with Advanced Multi-Agent Orchestration'. The current developments in the industry highlight rapid progress and emerging trends across multiple sectors.",
+        "scraped_content": "This is a detailed mock report regarding 'Microsoft Announces Copilot Studio V2 with Advanced Multi-Agent Orchestration'. The current developments in the industry highlight rapid progress and emerging trends across multiple sectors. Companies are actively investing in new solutions to optimize their operations, reduce carbon emissions, and improve productivity.\n\nKey stakeholders are emphasizing the integration of smart automation technologies to streamline workflows. These initiatives are expected to yield significant cost savings and enhance manufacturing performance over the next decade.",
+        "keyword": "Microsoft",
+        "is_pinned": true,
+        "company": "Microsoft",
+        "validation_relevance_score": 60.0,
+        "keywords": [
+            "Automation",
+            "Manufacturing"
+        ],
+        "relevance_score": 2.835,
+        "executive_summary": "This article discusses key industrial developments and technological advancements in the sector.",
+        "business_implications": [
+            "Provides insights into operational improvements and potential efficiency gains.",
+            "Highlights automation and digital transformation opportunities.",
+            "Illustrates market dynamics and competitor strategies in the industry."
+        ],
+        "ai_relevance": "Not AI-focused",
+        "industry_categories": [
+            "Manufacturing"
+        ],
+        "innovation_score": 50,
+        "sentiment": "Neutral"
+    },
+    {
+        "title": "OpenAI GPT-5 Achieves Unprecedented Multi-Modal Logic and Reasoning Benchmarks",
+        "url": "https://www.openaipinned-mock.com/gpt-5-reasoning-launch",
+        "canonical_url": null,
+        "source": "AI Vanguard",
+        "published_at": "2026-06-29T10:30:00Z",
+        "summary": "This is a detailed mock report regarding 'OpenAI GPT-5 Achieves Unprecedented Multi-Modal Logic and Reasoning Benchmarks'. The current developments in the industry highlight rapid progress and emerging trends across multiple sectors.",
+        "scraped_content": "This is a detailed mock report regarding 'OpenAI GPT-5 Achieves Unprecedented Multi-Modal Logic and Reasoning Benchmarks'. The current developments in the industry highlight rapid progress and emerging trends across multiple sectors. Companies are actively investing in new solutions to optimize their operations, reduce carbon emissions, and improve productivity.\n\nKey stakeholders are emphasizing the integration of smart automation technologies to streamline workflows. These initiatives are expected to yield significant cost savings and enhance manufacturing performance over the next decade.",
         "keyword": "OpenAI",
         "is_pinned": true,
         "company": "OpenAI",
-        "validation_relevance_score": 95.0,
+        "validation_relevance_score": 60.0,
         "keywords": [
-            "AI economic impact",
-            "job displacement due to AI",
-            "Nobel laureates on AI"
+            "Automation",
+            "Manufacturing"
         ],
-        "relevance_score": 0.773,
-        "executive_summary": "Nobel laureates and over 200 experts emphasize the urgent need for action on AI's economic impact, predicting a transformation surpassing that of the Industrial Revolution in speed and scale.",
+        "relevance_score": 2.836,
+        "executive_summary": "This article discusses key industrial developments and technological advancements in the sector.",
         "business_implications": [
-            "The rapid integration of AI into various sectors could lead to significant job displacement.",
-            "Companies may need to adapt their business models rapidly to integrate or compete with AI technologies.",
-            "Public institutions will face challenges in regulating and preparing for the societal impacts of a swiftly transforming economy."
+            "Provides insights into operational improvements and potential efficiency gains.",
+            "Highlights automation and digital transformation opportunities.",
+            "Illustrates market dynamics and competitor strategies in the industry."
         ],
-        "ai_relevance": "AI policy development",
+        "ai_relevance": "Not AI-focused",
         "industry_categories": [
-            "Technology News",
-            "Latest News Updates"
+            "Manufacturing"
         ],
-        "innovation_score": 90,
-        "sentiment": "Positive"
+        "innovation_score": 50,
+        "sentiment": "Neutral"
+    },
+    {
+        "title": "NVIDIA Isaac Robotics Platform Receives Generative AI Physical Foundation Models",
+        "url": "https://www.nvidiapinned-mock.com/isaac-robotics-generative-ai",
+        "canonical_url": null,
+        "source": "RoboTech Monthly",
+        "published_at": "2026-06-28T11:45:00Z",
+        "summary": "This is a detailed mock report regarding 'NVIDIA Isaac Robotics Platform Receives Generative AI Physical Foundation Models'. The current developments in the industry highlight rapid progress and emerging trends across multiple sectors.",
+        "scraped_content": "This is a detailed mock report regarding 'NVIDIA Isaac Robotics Platform Receives Generative AI Physical Foundation Models'. The current developments in the industry highlight rapid progress and emerging trends across multiple sectors. Companies are actively investing in new solutions to optimize their operations, reduce carbon emissions, and improve productivity.\n\nKey stakeholders are emphasizing the integration of smart automation technologies to streamline workflows. These initiatives are expected to yield significant cost savings and enhance manufacturing performance over the next decade.",
+        "keyword": "NVIDIA",
+        "is_pinned": true,
+        "company": "NVIDIA",
+        "validation_relevance_score": 80.0,
+        "keywords": [
+            "Robotic",
+            "Automation",
+            "Manufacturing"
+        ],
+        "relevance_score": 2.534,
+        "executive_summary": "This article discusses key industrial developments and technological advancements in the sector.",
+        "business_implications": [
+            "Provides insights into operational improvements and potential efficiency gains.",
+            "Highlights automation and digital transformation opportunities.",
+            "Illustrates market dynamics and competitor strategies in the industry."
+        ],
+        "ai_relevance": "Not AI-focused",
+        "industry_categories": [
+            "Manufacturing"
+        ],
+        "innovation_score": 50,
+        "sentiment": "Neutral"
     }
 ]

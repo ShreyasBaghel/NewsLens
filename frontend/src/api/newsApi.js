@@ -40,8 +40,8 @@ export async function fetchDashboardData(keyword = '') {
     
     return await response.json();
   } catch (err) {
-    if (err.name === 'TypeError' || err.message === 'Failed to fetch' || err.message.includes('fetch')) {
-      throw new Error("ConnectionError: Could not reach the backend — is the server running?");
+    if (err.name === 'TypeError' || err.message === 'Failed to fetch') {
+      throw new Error("ConnectionError: Backend unreachable");
     }
     throw err;
   }
@@ -71,8 +71,8 @@ export async function forceRefreshDashboard(keyword = '') {
     
     return await response.json();
   } catch (err) {
-    if (err.name === 'TypeError' || err.message === 'Failed to fetch' || err.message.includes('fetch')) {
-      throw new Error("ConnectionError: Could not reach the backend — is the server running?");
+    if (err.name === 'TypeError' || err.message === 'Failed to fetch') {
+      throw new Error("ConnectionError: Backend unreachable");
     }
     throw err;
   }
@@ -103,8 +103,8 @@ export async function pinArticle(article, keyword = '') {
     
     return await response.json();
   } catch (err) {
-    if (err.name === 'TypeError' || err.message === 'Failed to fetch' || err.message.includes('fetch')) {
-      throw new Error("ConnectionError: Could not reach the backend — is the server running?");
+    if (err.name === 'TypeError' || err.message === 'Failed to fetch') {
+      throw new Error("ConnectionError: Backend unreachable");
     }
     throw err;
   }
@@ -135,8 +135,8 @@ export async function unpinArticle(url, keyword = '') {
     
     return await response.json();
   } catch (err) {
-    if (err.name === 'TypeError' || err.message === 'Failed to fetch' || err.message.includes('fetch')) {
-      throw new Error("ConnectionError: Could not reach the backend — is the server running?");
+    if (err.name === 'TypeError' || err.message === 'Failed to fetch') {
+      throw new Error("ConnectionError: Backend unreachable");
     }
     throw err;
   }
@@ -161,8 +161,8 @@ export async function fetchMonitoredKeywords() {
     }
     return await response.json();
   } catch (err) {
-    if (err.name === 'TypeError' || err.message === 'Failed to fetch' || err.message.includes('fetch')) {
-      throw new Error("ConnectionError: Could not reach the backend");
+    if (err.name === 'TypeError' || err.message === 'Failed to fetch') {
+      throw new Error("ConnectionError: Backend unreachable");
     }
     throw err;
   }
@@ -190,8 +190,8 @@ export async function addMonitoredKeyword(keyword) {
     }
     return await response.json();
   } catch (err) {
-    if (err.name === 'TypeError' || err.message === 'Failed to fetch' || err.message.includes('fetch')) {
-      throw new Error("ConnectionError: Could not reach the backend");
+    if (err.name === 'TypeError' || err.message === 'Failed to fetch') {
+      throw new Error("ConnectionError: Backend unreachable");
     }
     throw err;
   }
@@ -220,8 +220,8 @@ export async function removeMonitoredKeyword(keyword) {
     }
     return await response.json();
   } catch (err) {
-    if (err.name === 'TypeError' || err.message === 'Failed to fetch' || err.message.includes('fetch')) {
-      throw new Error("ConnectionError: Could not reach the backend");
+    if (err.name === 'TypeError' || err.message === 'Failed to fetch') {
+      throw new Error("ConnectionError: Backend unreachable");
     }
     throw err;
   }
@@ -246,8 +246,8 @@ export async function runPipelineInBackground() {
     }
     return await response.json();
   } catch (err) {
-    if (err.name === 'TypeError' || err.message === 'Failed to fetch' || err.message.includes('fetch')) {
-      throw new Error("ConnectionError: Could not reach the backend");
+    if (err.name === 'TypeError' || err.message === 'Failed to fetch') {
+      throw new Error("ConnectionError: Backend unreachable");
     }
     throw err;
   }
@@ -272,8 +272,8 @@ export async function runIncrementalPipeline() {
     }
     return await response.json();
   } catch (err) {
-    if (err.name === 'TypeError' || err.message === 'Failed to fetch' || err.message.includes('fetch')) {
-      throw new Error("ConnectionError: Could not reach the backend");
+    if (err.name === 'TypeError' || err.message === 'Failed to fetch') {
+      throw new Error("ConnectionError: Backend unreachable");
     }
     throw err;
   }
@@ -298,8 +298,8 @@ export async function fetchPipelineStatus() {
     }
     return await response.json();
   } catch (err) {
-    if (err.name === 'TypeError' || err.message === 'Failed to fetch' || err.message.includes('fetch')) {
-      throw new Error("ConnectionError: Could not reach the backend");
+    if (err.name === 'TypeError' || err.message === 'Failed to fetch') {
+      throw new Error("ConnectionError: Backend unreachable");
     }
     throw err;
   }

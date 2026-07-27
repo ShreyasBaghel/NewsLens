@@ -6,8 +6,8 @@ import logging
 # Ensure project root is in the Python path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+from app.database import init_db
 from app.services.cache import (
-    init_db,
     get_cached_keywords_for_article,
     save_cached_keywords_for_article,
     get_all_aggregated_keywords

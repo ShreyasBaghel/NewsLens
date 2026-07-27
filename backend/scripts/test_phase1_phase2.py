@@ -9,7 +9,8 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app.services.dataset_manager import dataset_manager, StagingDataset
 from app.services.validator import validate_and_clean_tags, normalize_text_for_matching
-from app.services.cache import init_db, save_smart_cached_tags, get_smart_cached_tags
+from app.services.cache import save_smart_cached_tags, get_smart_cached_tags
+from app.database import init_db
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
 logger = logging.getLogger("test_phase1_phase2")

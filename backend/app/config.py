@@ -49,7 +49,7 @@ class Settings(BaseSettings):
     
     # Cache settings from the plan
     CACHE_FILE_PATH: str = "./cache.json"
-    REFRESH_INTERVAL_HOURS: int = 12
+    REFRESH_INTERVAL_HOURS: int = 24
     CACHE_TTL_DAYS: int = 7
     DE_DUP_DAYS: int = 7 # Compatibility
     SEEN_ARTICLES_JSON_PATH: str = "seen_articles.json" # Compatibility

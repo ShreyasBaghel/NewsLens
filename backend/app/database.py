@@ -40,6 +40,13 @@ class ArticleKeyword(Base):
     summary = Column(Text(4294967295))
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
+class SystemMetadata(Base):
+    __tablename__ = "system_metadata"
+    
+    key = Column(String(255), primary_key=True)
+    value = Column(String(255), nullable=False)
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
+
 class NewsdataUsage(Base):
     __tablename__ = "newsdata_usage"
     
