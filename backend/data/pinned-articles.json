@@ -16,5 +16,19 @@
         "scraped_content": "The rapid rise of Chinese artificial intelligence has sparked an unusual divide inside Silicon Valley, pitting some of the world\u2019s biggest AI developers against one another over how the United States should respond. Until recently, American companies were widely viewed as having an unassailable lead in frontier AI. But a string of increasingly capable Chinese models, including DeepSeek, Z.ai\u2019s GLM 5.2 and Moonshot AI's Kimi K3, has challenged that assumption. Many of these systems have delivered competitive performance while adopting an open-weight approach, allowing developers to download, modify and deploy the models on their own infrastructure. That shift has triggered a broader debate extending beyond technology and into national security, trade policy and intellectual property. At its centre is a simple question: should Washington restrict access to Chinese AI, or should US companies focus on building better alternatives? Anthropic has emerged as one of the strongest advocates for tighter controls. The Claude AI developer argues that several Chinese AI companies have narrowed the performance gap with American rivals not through independent breakthroughs, but by unlawfully extracting knowledge from frontier US models. \u201cWe have identified industrial-scale campaigns by three AI laboratories\u2014DeepSeek, Moonshot, and MiniMax\u2014to illicitly extract Claude\u2019s capabilities to improve their own models,\u201d Anthropic said. According to the company, those organisations generated more than 16 million interactions with Claude using approximately 24,000 fraudulent accounts, allegedly breaching its terms of service and regional access restrictions. The allegations have not been independently verified, and the companies named by Anthropic have not publicly accepted",
         "validation_relevance_score": 95.0,
         "llm_insights": null
+    },
+    {
+        "url": "https://fake.com/pinned-article",
+        "title": "Pinned Article (no ai)",
+        "keywords": [
+            "other"
+        ]
+    },
+    {
+        "url": "https://fake.com/pinned-article",
+        "title": "Pinned Article (no ai)",
+        "keywords": [
+            "other"
+        ]
     }
 ]

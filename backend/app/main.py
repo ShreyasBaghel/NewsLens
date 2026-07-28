@@ -73,16 +73,29 @@ def overlay_pinned_articles(payload: dict) -> dict:
             url_to_article[url] = art_dict
             
     final_pinned = []
+    is_keyword_search = bool(payload.get("keyword"))
+    incoming_pinned_urls = {a.get("url") for a in incoming_pinned if isinstance(a, dict) and a.get("url")}
+    
     for p in pinned:
         url = p.get("url")
-        if url:
-            art_dict = dict(p)
-            art_dict["is_pinned"] = True
-            if url in url_to_article:
-                for k, v in url_to_article[url].items():
-                    if k != "is_pinned":
-                        art_dict[k] = v
-            final_pinned.append(art_dict)
+        if not url:
+            continue
+            
+        # If this is a keyword search, only include pinned articles that match the keyword
+        # (which were passed via incoming_pinned)
+        if is_keyword_search and url not in incoming_pinned_urls:
+            continue
+            
+        art_dict = dict(p)
+        art_dict["is_pinned"] = True
+        
+        # Merge latest metadata
+        if url in url_to_article:
+            for k, v in url_to_article[url].items():
+                if k != "is_pinned":
+                    art_dict[k] = v
+                    
+        final_pinned.append(art_dict)
             
     final_unpinned = []
     for a in incoming_articles + incoming_pinned:
@@ -283,7 +296,7 @@ import datetime
 
 def get_news_from_cache_or_default(keyword: Optional[str]) -> dict:
     from app.services.dataset_manager import dataset_manager
-    from app.services.cache import search_cache_by_keyword
+    from app.services.cache import search_cache_by_keyword, is_keyword_match
     
     active_dataset = dataset_manager.get_active_dataset()
     keyword_clean = keyword.strip() if keyword else ""
@@ -295,13 +308,8 @@ def get_news_from_cache_or_default(keyword: Optional[str]) -> dict:
     matching_articles = search_cache_by_keyword(keyword_clean)
             
     matching_pinned = []
-    kw_lower = keyword_clean.lower()
     for art in active_dataset.get("pinned_articles", []):
-        title_lower = art.get("title", "").lower()
-        summary_lower = art.get("summary", "").lower()
-        tags_lower = [tag.lower() for tag in art.get("keywords", [])]
-        
-        if kw_lower in tags_lower or (kw_lower and (kw_lower in title_lower or kw_lower in summary_lower)):
+        if is_keyword_match(keyword_clean, art):
             matching_pinned.append(art)
             
     return {

@@ -35,7 +35,7 @@ import {
   Sliders,
   CheckCircle2
 } from 'lucide-react';
-
+// Debug trace removed
 const LoadingSkeleton = () => (
   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1.5rem', width: '100%' }}>
     {[1, 2, 3, 4, 5, 6].map(i => (
@@ -53,11 +53,15 @@ const LoadingSkeleton = () => (
 );
 
 export default function App() {
+  const loadAbortControllerRef = React.useRef(null);
+  const bgAbortControllerRef = React.useRef(null);
+  const searchAbortControllerRef = React.useRef(null);
+  const searchBgAbortControllerRef = React.useRef(null);
+
   const [userRole, setUserRole] = useState(() => localStorage.getItem('user_role') || null);
   const [normalFeed, setNormalFeed] = useState([]);
-  const [searchResults, setSearchResults] = useState([]);
+  
   const [pinnedArticles, setPinnedArticles] = useState([]);
-  const [searchKeyword, setSearchKeyword] = useState('');
   const [filterText, setFilterText] = useState('');
   const [activeView, setActiveView] = useState('feed'); // 'feed', 'search', 'admin'
   const [lastUpdated, setLastUpdated] = useState('');
@@ -73,7 +77,6 @@ export default function App() {
   // Sidebar & search state
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [chips, setChips] = useState([]);
-  const [keywordCounts, setKeywordCounts] = useState({});
   const [selectedSource, setSelectedSource] = useState(null);
   
   // Admin dashboard state
@@ -87,6 +90,10 @@ export default function App() {
   });
 
   useEffect(() => {
+    // Empty mount effect, debug trace removed
+  }, []);
+
+  useEffect(() => {
     document.body.className = `${theme}-theme`;
     localStorage.setItem('theme', theme);
   }, [theme]);
@@ -95,26 +102,38 @@ export default function App() {
     setTheme(prev => prev === 'light' ? 'dark' : 'light');
   };
 
-  const loadInitialData = async () => {
+  const loadInitialData = async (reason = 'unknown') => {
     if (!userRole) return;
     setIsLoading(true);
     setError(null);
+    setVisibleFeedCount(10); // Reset pagination state
+
+    // Abort any pending requests to prevent race conditions
+    if (loadAbortControllerRef.current) {
+      loadAbortControllerRef.current.abort();
+    }
+    if (bgAbortControllerRef.current) {
+      bgAbortControllerRef.current.abort();
+    }
+
+    const loadController = new AbortController();
+    loadAbortControllerRef.current = loadController;
+
     try {
       // Fetch initial batch of articles for fast First Paint
-      const data = await fetchDashboardData('', 20, 0);
+      const data = await fetchDashboardData('', 20, 0, 'initial load - ' + reason, loadController.signal);
       setNormalFeed(data.articles || []);
       setPinnedArticles(data.pinned_articles || []);
       setLastUpdated(data.last_updated || '');
       setNextUpdate(data.next_update || '');
-      if (data.keyword_counts) {
-        setKeywordCounts(data.keyword_counts);
-      }
       
       // Stop loading early so user sees content immediately
       setIsLoading(false);
       
       // Delay background fetches to prioritize browser rendering of the first batch
       setTimeout(() => {
+        if (loadController.signal.aborted) return;
+
         // Parallelize admin requests
         if (userRole === 'admin') {
           Promise.all([
@@ -126,21 +145,34 @@ export default function App() {
           }).catch(err => console.error("Admin fetch error:", err));
         }
         
+        const bgController = new AbortController();
+        bgAbortControllerRef.current = bgController;
+
         // Background fetch remaining articles
-        fetchDashboardData('', 1000, 20).then(restData => {
-          setNormalFeed(prev => [...prev, ...(restData.articles || [])]);
-        }).catch(err => console.error("Background fetch error:", err));
+        fetchDashboardData('', 1000, 20, 'background load', bgController.signal).then(restData => {
+          if (bgController.signal.aborted) return;
+          
+          setNormalFeed(prev => {
+            const prevIds = new Set(prev.map(a => a.id || a.url));
+            const newArticles = (restData.articles || []).filter(a => !prevIds.has(a.id || a.url));
+            return [...prev, ...newArticles];
+          });
+        }).catch(err => {
+          if (err.name !== 'AbortError') console.error("Background fetch error:", err);
+        });
       }, 100);
 
     } catch (err) {
-      setError(err.message || 'Failed to load news dashboard payload.');
-      setIsLoading(false);
+      if (err.name !== 'AbortError') {
+        setError(err.message || 'Failed to load news dashboard payload.');
+        setIsLoading(false);
+      }
     }
   };
 
   useEffect(() => {
     if (userRole) {
-      loadInitialData();
+      loadInitialData('useEffect(userRole)');
     }
   }, [userRole]);
 
@@ -166,33 +198,33 @@ export default function App() {
           const res = await fetchPipelineStatus();
           setPipelineRunStatus(res.status);
           if (res.status.status !== 'running') {
+            console.log(`[POLLING] Pipeline finished, triggering loadInitialData`);
             // Reload news items on complete
-            loadInitialData();
+            loadInitialData('pipeline polling complete');
           }
         } catch (err) {
           console.error('Error polling status:', err);
         }
       }, 2000);
     }
-    return () => clearInterval(intervalId);
+    return () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+    };
   }, [pipelineRunStatus.status, userRole]);
 
   const handleForceRefresh = async () => {
     if (userRole !== 'admin') return;
     setIsRefreshing(true);
     setError(null);
+    setVisibleFeedCount(10);
+    setVisibleSearchCount(20);
     try {
-      const data = await forceRefreshDashboard(searchKeyword);
-      if (searchKeyword) {
-        setSearchResults(data.articles || []);
-      } else {
-        setNormalFeed(data.articles || []);
-      }
+      const data = await forceRefreshDashboard('');
+      setNormalFeed(data.articles || []);
       if (data.pinned_articles) {
         setPinnedArticles(data.pinned_articles);
-      }
-      if (data.keyword_counts) {
-        setKeywordCounts(data.keyword_counts);
       }
       setLastUpdated(data.last_updated || '');
       setNextUpdate(data.next_update || '');
@@ -204,45 +236,18 @@ export default function App() {
   };
 
   const handleSearch = async (term) => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      // Fetch initial batch
-      const data = await fetchDashboardData(term, 20, 0);
-      setSearchResults(data.articles || []);
-      setSearchKeyword(term);
-      if (data.pinned_articles) {
-        setPinnedArticles(data.pinned_articles);
-      }
-      if (data.keyword_counts) {
-        setKeywordCounts(data.keyword_counts);
-      }
-      if (data.last_updated) setLastUpdated(data.last_updated);
-      if (data.next_update) setNextUpdate(data.next_update);
+    if (term) {
       setActiveView('search');
       setVisibleSearchCount(20);
-      
-      setIsLoading(false);
-      
-      // Delay background fetch to prioritize browser rendering of the first batch
-      setTimeout(() => {
-        // Background fetch remaining
-        fetchDashboardData(term, 1000, 20).then(restData => {
-          setSearchResults(prev => [...prev, ...(restData.articles || [])]);
-        }).catch(err => console.error("Background search fetch error:", err));
-      }, 100);
-      
-    } catch (err) {
-      setError(err.message || 'Search failed.');
-      setIsLoading(false);
+    } else {
+      setActiveView('feed');
     }
   };
 
   const handleClear = () => {
-    setSearchKeyword('');
-    setSearchResults([]);
     setChips([]);
     setSelectedSource(null);
+    setFilterText('');
     setActiveView('feed');
     setVisibleFeedCount(10);
   };
@@ -254,32 +259,43 @@ export default function App() {
       setSelectedSource(source);
       // Clear keyword filters
       setChips([]);
-      setSearchKeyword('');
-      setSearchResults([]);
+      setFilterText('');
       setActiveView('feed');
       setVisibleFeedCount(10);
     }
   };
 
   const handleTogglePin = async (article) => {
+    // Optimistic UI update - prevent whole feed replacement
+    const updateFeed = (feed) => feed.map(a => 
+      (a.id === article.id || a.url === article.url) 
+        ? { ...a, is_pinned: !article.is_pinned } 
+        : a
+    );
+    
+    setNormalFeed(prev => updateFeed(prev));
+
     try {
       let data;
       if (article.is_pinned) {
-        data = await unpinArticle(article.url, searchKeyword);
+        data = await unpinArticle(article.url, '');
       } else {
-        data = await pinArticle(article, searchKeyword);
+        data = await pinArticle(article, '');
       }
-      if (searchKeyword) {
-        setSearchResults(data.articles || []);
-      } else {
-        setNormalFeed(data.articles || []);
-      }
+      
       if (data.pinned_articles) {
         setPinnedArticles(data.pinned_articles);
       }
       if (data.last_updated) setLastUpdated(data.last_updated);
       if (data.next_update) setNextUpdate(data.next_update);
     } catch (err) {
+      // Revert optimistic update
+      const revertFeed = (feed) => feed.map(a => 
+        (a.id === article.id || a.url === article.url) 
+          ? { ...a, is_pinned: article.is_pinned } 
+          : a
+      );
+      setNormalFeed(prev => revertFeed(prev));
       setError(err.message || 'Failed to toggle pin state.');
     }
   };
@@ -541,52 +557,56 @@ export default function App() {
   };
 
   // --- Optimized Memoized Selectors ---
+  const currentDataset = React.useMemo(() => {
+    let unfiltered = [...pinnedArticles, ...normalFeed];
+    if (selectedSource) {
+      unfiltered = unfiltered.filter(a => (a.source || 'Unknown') === selectedSource);
+    }
+    if (chips.length > 0) {
+      unfiltered = unfiltered.filter(a => 
+        chips.every(chip => 
+          a.keywords && a.keywords.map(k => k.toLowerCase()).includes(chip.toLowerCase())
+        )
+      );
+    }
+    return filterText 
+      ? unfiltered.filter(a => 
+          a.title?.toLowerCase().includes(filterText.toLowerCase()) || 
+          a.summary?.toLowerCase().includes(filterText.toLowerCase()) || 
+          a.company?.toLowerCase().includes(filterText.toLowerCase()) || 
+          a.keywords?.some(k => k.toLowerCase().includes(filterText.toLowerCase()))
+        )
+      : unfiltered;
+  }, [normalFeed, pinnedArticles, selectedSource, chips, filterText]);
+
   const sourceCounts = React.useMemo(() => {
     const counts = {};
-    [...normalFeed, ...pinnedArticles].forEach(art => {
+    currentDataset.forEach(art => {
       const src = art.source || 'Unknown';
       counts[src] = (counts[src] || 0) + 1;
     });
     return counts;
-  }, [normalFeed, pinnedArticles]);
+  }, [currentDataset]);
 
-  const combinedFeed = React.useMemo(() => {
-    let unfilteredFeed = [...pinnedArticles, ...normalFeed];
-    if (selectedSource) {
-      unfilteredFeed = unfilteredFeed.filter(a => (a.source || 'Unknown') === selectedSource);
-    }
-    return filterText 
-      ? unfilteredFeed.filter(a => 
-          a.title?.toLowerCase().includes(filterText.toLowerCase()) || 
-          a.summary?.toLowerCase().includes(filterText.toLowerCase()) || 
-          a.company?.toLowerCase().includes(filterText.toLowerCase()) || 
-          a.keywords?.some(k => k.toLowerCase().includes(filterText.toLowerCase()))
-        )
-      : unfilteredFeed;
-  }, [normalFeed, pinnedArticles, selectedSource, filterText]);
+  const keywordCounts = React.useMemo(() => {
+    const counts = {};
+    currentDataset.forEach(art => {
+      if (art.keywords && Array.isArray(art.keywords)) {
+        art.keywords.forEach(kw => {
+          counts[kw] = (counts[kw] || 0) + 1;
+        });
+      }
+    });
+    return counts;
+  }, [currentDataset]);
 
   const paginatedFeed = React.useMemo(() => 
-    combinedFeed.slice(0, pinnedArticles.length + visibleFeedCount), 
-  [combinedFeed, pinnedArticles.length, visibleFeedCount]);
-
-  const combinedSearch = React.useMemo(() => {
-    let unfilteredSearch = [...pinnedArticles, ...searchResults];
-    if (selectedSource) {
-      unfilteredSearch = unfilteredSearch.filter(a => (a.source || 'Unknown') === selectedSource);
-    }
-    return filterText 
-      ? unfilteredSearch.filter(a => 
-          a.title?.toLowerCase().includes(filterText.toLowerCase()) || 
-          a.summary?.toLowerCase().includes(filterText.toLowerCase()) || 
-          a.company?.toLowerCase().includes(filterText.toLowerCase()) || 
-          a.keywords?.some(k => k.toLowerCase().includes(filterText.toLowerCase()))
-        )
-      : unfilteredSearch;
-  }, [searchResults, pinnedArticles, selectedSource, filterText]);
+    currentDataset.slice(0, pinnedArticles.length + visibleFeedCount), 
+  [currentDataset, pinnedArticles.length, visibleFeedCount]);
 
   const paginatedSearch = React.useMemo(() => 
-    combinedSearch.slice(0, pinnedArticles.length + visibleSearchCount), 
-  [combinedSearch, pinnedArticles.length, visibleSearchCount]);
+    currentDataset.slice(0, pinnedArticles.length + visibleSearchCount), 
+  [currentDataset, pinnedArticles.length, visibleSearchCount]);
   // ------------------------------------
 
   return (
@@ -793,7 +813,7 @@ export default function App() {
           <div className="nav-tabs-container glass-panel animate-fade-in">
             {[
               { id: 'feed', label: 'Home Feed', icon: Newspaper, count: normalFeed.length + pinnedArticles.length },
-              { id: 'search', label: 'Search Results', icon: Search, count: searchKeyword ? searchResults.length + pinnedArticles.length : null },
+              { id: 'search', label: 'Search Results', icon: Search, count: (chips.length > 0 || filterText) ? currentDataset.length : null },
               // Admin tab visible only to administrators
               ...(userRole === 'admin' ? [{ id: 'admin', label: 'Admin Dashboard', icon: Sliders, count: null }] : [])
             ].map((tab) => {
@@ -878,7 +898,7 @@ export default function App() {
                       </h2>
                       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', marginLeft: 'auto' }}>
                         <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                          Showing {combinedFeed.length} articles
+                          Showing {currentDataset.length} articles
                         </span>
                         <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontStyle: 'italic', opacity: 0.8 }}>
                           Articles are deduplicated over the previous 7 days.
@@ -886,7 +906,7 @@ export default function App() {
                       </div>
                     </div>
 
-                    {combinedFeed.length > 0 ? (
+                    {currentDataset.length > 0 ? (
                       <>
                         <ArticleGrid>
                           {paginatedFeed.map((article, idx) => (
@@ -897,7 +917,7 @@ export default function App() {
                             />
                           ))}
                         </ArticleGrid>
-                        {combinedFeed.length > paginatedFeed.length && (
+                        {currentDataset.length > paginatedFeed.length && (
                           <div style={{ display: 'flex', justifyContent: 'center', marginTop: '2rem' }}>
                             <button
                               onClick={() => setVisibleFeedCount(prev => prev + 10)}
@@ -950,12 +970,12 @@ export default function App() {
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.5rem' }}>
                       <Search size={18} style={{ color: 'var(--color-primary)' }} />
                       <h2 style={{ fontSize: '1.25rem', fontFamily: 'var(--font-title)' }}>
-                        {searchKeyword ? `Topic Intelligence: "${searchKeyword}"` : 'Search Results'}
+                        {chips.length > 0 ? `Topic Intelligence: "${chips.join(', ')}"` : (filterText ? `Topic Intelligence: "${filterText}"` : 'Search Results')}
                       </h2>
-                      {searchKeyword && (
+                      {(chips.length > 0 || filterText) && (
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', marginLeft: 'auto' }}>
                           <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                            Showing {combinedSearch.length} articles
+                            Showing {currentDataset.length} articles
                           </span>
                           <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontStyle: 'italic', opacity: 0.8 }}>
                             Articles are deduplicated over the previous 7 days.
@@ -964,7 +984,7 @@ export default function App() {
                       )}
                     </div>
 
-                    {!searchKeyword ? (
+                    {(!chips.length && !filterText) ? (
                       <div className="glass-panel welcome-panel animate-fade-in">
                         <Search size={48} style={{ color: 'var(--text-muted)' }} />
                         <h3 style={{ fontSize: '1.25rem', color: 'var(--text-primary)', fontFamily: 'var(--font-title)' }}>
@@ -974,7 +994,7 @@ export default function App() {
                           Enter industry, technology, or competitor keywords in the search bar above to fetch targeted real-time intelligence reports.
                         </p>
                       </div>
-                    ) : combinedSearch.length > 0 ? (
+                    ) : currentDataset.length > 0 ? (
                       <>
                         <ArticleGrid>
                           {paginatedSearch.map((article, idx) => (
@@ -985,7 +1005,7 @@ export default function App() {
                             />
                           ))}
                         </ArticleGrid>
-                        {combinedSearch.length > paginatedSearch.length && (
+                        {currentDataset.length > paginatedSearch.length && (
                           <div style={{ display: 'flex', justifyContent: 'center', marginTop: '2rem' }}>
                             <button
                               onClick={() => setVisibleSearchCount(prev => prev + 10)}

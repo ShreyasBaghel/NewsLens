@@ -13,12 +13,7 @@ function getAuthHeaders() {
   };
 }
 
-/**
- * Fetch latest dashboard payload (general feed + pinned company feeds)
- * @param {string} [keyword] Optional keyword search term
- * @returns {Promise<object>} Dashboard payload object
- */
-export async function fetchDashboardData(keyword = '', limit = null, offset = null) {
+export async function fetchDashboardData(keyword = '', limit = null, offset = null, source = 'unknown', signal = null) {
   const url = new URL(`${API_BASE_URL}/news`);
   if (keyword) {
     url.searchParams.append('keyword', keyword);
@@ -37,6 +32,7 @@ export async function fetchDashboardData(keyword = '', limit = null, offset = nu
         'Accept': 'application/json',
         ...getAuthHeaders()
       },
+      signal
     });
     
     if (!response.ok) {
@@ -75,7 +71,17 @@ export async function forceRefreshDashboard(keyword = '') {
       throw new Error(errorData.detail || `Failed to refresh news feed (Status ${response.status})`);
     }
     
-    return await response.json();
+    const data = await response.json();
+    if (window.DEBUG_FEED_TRACE && (response.url.includes('pin') || response.url.includes('unpin'))) {
+      const endTime = Date.now();
+      const count = data.articles ? data.articles.length : 0;
+      const pinnedCount = data.pinned_articles ? data.pinned_articles.length : 0;
+      const kwCount = data.keyword_counts ? Object.keys(data.keyword_counts).length : 0;
+      const firstId = count > 0 ? (data.articles[0].id || data.articles[0].url) : 'none';
+      const lastId = count > 0 ? (data.articles[count - 1].id || data.articles[count - 1].url) : 'none';
+      console.log(`${window.performance ? window.performance.now().toFixed(3) : 0} Request #${reqId} finished. Duration: ${endTime - startTime}ms. Returned ${count} articles, ${pinnedCount} pinned, ${kwCount} keywords. First ID: ${firstId}, Last ID: ${lastId}`);
+    }
+    return data;
   } catch (err) {
     if (err.name === 'TypeError' || err.message === 'Failed to fetch') {
       throw new Error("ConnectionError: Backend unreachable");
@@ -91,6 +97,9 @@ export async function forceRefreshDashboard(keyword = '') {
  * @returns {Promise<object>} Updated dashboard payload
  */
 export async function pinArticle(article, keyword = '') {
+  const reqId = ++requestCounter;
+  if (window.DEBUG_FEED_TRACE) console.log(`${window.performance ? window.performance.now().toFixed(3) : 0} Request #${reqId} (Pin) started`);
+  const startTime = Date.now();
   try {
     const response = await fetch(`${API_BASE_URL}/news/pin`, {
       method: 'POST',
@@ -107,7 +116,17 @@ export async function pinArticle(article, keyword = '') {
       throw new Error(errorData.detail || `Failed to pin article (Status ${response.status})`);
     }
     
-    return await response.json();
+    const data = await response.json();
+    if (window.DEBUG_FEED_TRACE && (response.url.includes('pin') || response.url.includes('unpin'))) {
+      const endTime = Date.now();
+      const count = data.articles ? data.articles.length : 0;
+      const pinnedCount = data.pinned_articles ? data.pinned_articles.length : 0;
+      const kwCount = data.keyword_counts ? Object.keys(data.keyword_counts).length : 0;
+      const firstId = count > 0 ? (data.articles[0].id || data.articles[0].url) : 'none';
+      const lastId = count > 0 ? (data.articles[count - 1].id || data.articles[count - 1].url) : 'none';
+      console.log(`${window.performance ? window.performance.now().toFixed(3) : 0} Request #${reqId} finished. Duration: ${endTime - startTime}ms. Returned ${count} articles, ${pinnedCount} pinned, ${kwCount} keywords. First ID: ${firstId}, Last ID: ${lastId}`);
+    }
+    return data;
   } catch (err) {
     if (err.name === 'TypeError' || err.message === 'Failed to fetch') {
       throw new Error("ConnectionError: Backend unreachable");
@@ -123,6 +142,9 @@ export async function pinArticle(article, keyword = '') {
  * @returns {Promise<object>} Updated dashboard payload
  */
 export async function unpinArticle(url, keyword = '') {
+  const reqId = ++requestCounter;
+  if (window.DEBUG_FEED_TRACE) console.log(`${window.performance ? window.performance.now().toFixed(3) : 0} Request #${reqId} (Unpin) started`);
+  const startTime = Date.now();
   try {
     const response = await fetch(`${API_BASE_URL}/news/unpin`, {
       method: 'POST',
@@ -139,7 +161,17 @@ export async function unpinArticle(url, keyword = '') {
       throw new Error(errorData.detail || `Failed to unpin article (Status ${response.status})`);
     }
     
-    return await response.json();
+    const data = await response.json();
+    if (window.DEBUG_FEED_TRACE && (response.url.includes('pin') || response.url.includes('unpin'))) {
+      const endTime = Date.now();
+      const count = data.articles ? data.articles.length : 0;
+      const pinnedCount = data.pinned_articles ? data.pinned_articles.length : 0;
+      const kwCount = data.keyword_counts ? Object.keys(data.keyword_counts).length : 0;
+      const firstId = count > 0 ? (data.articles[0].id || data.articles[0].url) : 'none';
+      const lastId = count > 0 ? (data.articles[count - 1].id || data.articles[count - 1].url) : 'none';
+      console.log(`${window.performance ? window.performance.now().toFixed(3) : 0} Request #${reqId} finished. Duration: ${endTime - startTime}ms. Returned ${count} articles, ${pinnedCount} pinned, ${kwCount} keywords. First ID: ${firstId}, Last ID: ${lastId}`);
+    }
+    return data;
   } catch (err) {
     if (err.name === 'TypeError' || err.message === 'Failed to fetch') {
       throw new Error("ConnectionError: Backend unreachable");
@@ -165,7 +197,17 @@ export async function fetchMonitoredKeywords() {
       const errorData = await response.json().catch(() => ({}));
       throw new Error(errorData.detail || 'Failed to fetch monitored keywords');
     }
-    return await response.json();
+    const data = await response.json();
+    if (window.DEBUG_FEED_TRACE && (response.url.includes('pin') || response.url.includes('unpin'))) {
+      const endTime = Date.now();
+      const count = data.articles ? data.articles.length : 0;
+      const pinnedCount = data.pinned_articles ? data.pinned_articles.length : 0;
+      const kwCount = data.keyword_counts ? Object.keys(data.keyword_counts).length : 0;
+      const firstId = count > 0 ? (data.articles[0].id || data.articles[0].url) : 'none';
+      const lastId = count > 0 ? (data.articles[count - 1].id || data.articles[count - 1].url) : 'none';
+      console.log(`${window.performance ? window.performance.now().toFixed(3) : 0} Request #${reqId} finished. Duration: ${endTime - startTime}ms. Returned ${count} articles, ${pinnedCount} pinned, ${kwCount} keywords. First ID: ${firstId}, Last ID: ${lastId}`);
+    }
+    return data;
   } catch (err) {
     if (err.name === 'TypeError' || err.message === 'Failed to fetch') {
       throw new Error("ConnectionError: Backend unreachable");
@@ -194,7 +236,17 @@ export async function addMonitoredKeyword(keyword) {
       const errorData = await response.json().catch(() => ({}));
       throw new Error(errorData.detail || 'Failed to add monitored keyword');
     }
-    return await response.json();
+    const data = await response.json();
+    if (window.DEBUG_FEED_TRACE && (response.url.includes('pin') || response.url.includes('unpin'))) {
+      const endTime = Date.now();
+      const count = data.articles ? data.articles.length : 0;
+      const pinnedCount = data.pinned_articles ? data.pinned_articles.length : 0;
+      const kwCount = data.keyword_counts ? Object.keys(data.keyword_counts).length : 0;
+      const firstId = count > 0 ? (data.articles[0].id || data.articles[0].url) : 'none';
+      const lastId = count > 0 ? (data.articles[count - 1].id || data.articles[count - 1].url) : 'none';
+      console.log(`${window.performance ? window.performance.now().toFixed(3) : 0} Request #${reqId} finished. Duration: ${endTime - startTime}ms. Returned ${count} articles, ${pinnedCount} pinned, ${kwCount} keywords. First ID: ${firstId}, Last ID: ${lastId}`);
+    }
+    return data;
   } catch (err) {
     if (err.name === 'TypeError' || err.message === 'Failed to fetch') {
       throw new Error("ConnectionError: Backend unreachable");
@@ -224,7 +276,17 @@ export async function removeMonitoredKeyword(keyword) {
       const errorData = await response.json().catch(() => ({}));
       throw new Error(errorData.detail || 'Failed to remove monitored keyword');
     }
-    return await response.json();
+    const data = await response.json();
+    if (window.DEBUG_FEED_TRACE && (response.url.includes('pin') || response.url.includes('unpin'))) {
+      const endTime = Date.now();
+      const count = data.articles ? data.articles.length : 0;
+      const pinnedCount = data.pinned_articles ? data.pinned_articles.length : 0;
+      const kwCount = data.keyword_counts ? Object.keys(data.keyword_counts).length : 0;
+      const firstId = count > 0 ? (data.articles[0].id || data.articles[0].url) : 'none';
+      const lastId = count > 0 ? (data.articles[count - 1].id || data.articles[count - 1].url) : 'none';
+      console.log(`${window.performance ? window.performance.now().toFixed(3) : 0} Request #${reqId} finished. Duration: ${endTime - startTime}ms. Returned ${count} articles, ${pinnedCount} pinned, ${kwCount} keywords. First ID: ${firstId}, Last ID: ${lastId}`);
+    }
+    return data;
   } catch (err) {
     if (err.name === 'TypeError' || err.message === 'Failed to fetch') {
       throw new Error("ConnectionError: Backend unreachable");
@@ -250,7 +312,17 @@ export async function runPipelineInBackground() {
       const errorData = await response.json().catch(() => ({}));
       throw new Error(errorData.detail || 'Failed to trigger pipeline run');
     }
-    return await response.json();
+    const data = await response.json();
+    if (window.DEBUG_FEED_TRACE && (response.url.includes('pin') || response.url.includes('unpin'))) {
+      const endTime = Date.now();
+      const count = data.articles ? data.articles.length : 0;
+      const pinnedCount = data.pinned_articles ? data.pinned_articles.length : 0;
+      const kwCount = data.keyword_counts ? Object.keys(data.keyword_counts).length : 0;
+      const firstId = count > 0 ? (data.articles[0].id || data.articles[0].url) : 'none';
+      const lastId = count > 0 ? (data.articles[count - 1].id || data.articles[count - 1].url) : 'none';
+      console.log(`${window.performance ? window.performance.now().toFixed(3) : 0} Request #${reqId} finished. Duration: ${endTime - startTime}ms. Returned ${count} articles, ${pinnedCount} pinned, ${kwCount} keywords. First ID: ${firstId}, Last ID: ${lastId}`);
+    }
+    return data;
   } catch (err) {
     if (err.name === 'TypeError' || err.message === 'Failed to fetch') {
       throw new Error("ConnectionError: Backend unreachable");
@@ -276,7 +348,17 @@ export async function runIncrementalPipeline() {
       const errorData = await response.json().catch(() => ({}));
       throw new Error(errorData.detail || 'Failed to trigger incremental pipeline run');
     }
-    return await response.json();
+    const data = await response.json();
+    if (window.DEBUG_FEED_TRACE && (response.url.includes('pin') || response.url.includes('unpin'))) {
+      const endTime = Date.now();
+      const count = data.articles ? data.articles.length : 0;
+      const pinnedCount = data.pinned_articles ? data.pinned_articles.length : 0;
+      const kwCount = data.keyword_counts ? Object.keys(data.keyword_counts).length : 0;
+      const firstId = count > 0 ? (data.articles[0].id || data.articles[0].url) : 'none';
+      const lastId = count > 0 ? (data.articles[count - 1].id || data.articles[count - 1].url) : 'none';
+      console.log(`${window.performance ? window.performance.now().toFixed(3) : 0} Request #${reqId} finished. Duration: ${endTime - startTime}ms. Returned ${count} articles, ${pinnedCount} pinned, ${kwCount} keywords. First ID: ${firstId}, Last ID: ${lastId}`);
+    }
+    return data;
   } catch (err) {
     if (err.name === 'TypeError' || err.message === 'Failed to fetch') {
       throw new Error("ConnectionError: Backend unreachable");
@@ -302,7 +384,17 @@ export async function fetchPipelineStatus() {
       const errorData = await response.json().catch(() => ({}));
       throw new Error(errorData.detail || 'Failed to fetch pipeline status');
     }
-    return await response.json();
+    const data = await response.json();
+    if (window.DEBUG_FEED_TRACE && (response.url.includes('pin') || response.url.includes('unpin'))) {
+      const endTime = Date.now();
+      const count = data.articles ? data.articles.length : 0;
+      const pinnedCount = data.pinned_articles ? data.pinned_articles.length : 0;
+      const kwCount = data.keyword_counts ? Object.keys(data.keyword_counts).length : 0;
+      const firstId = count > 0 ? (data.articles[0].id || data.articles[0].url) : 'none';
+      const lastId = count > 0 ? (data.articles[count - 1].id || data.articles[count - 1].url) : 'none';
+      console.log(`${window.performance ? window.performance.now().toFixed(3) : 0} Request #${reqId} finished. Duration: ${endTime - startTime}ms. Returned ${count} articles, ${pinnedCount} pinned, ${kwCount} keywords. First ID: ${firstId}, Last ID: ${lastId}`);
+    }
+    return data;
   } catch (err) {
     if (err.name === 'TypeError' || err.message === 'Failed to fetch') {
       throw new Error("ConnectionError: Backend unreachable");

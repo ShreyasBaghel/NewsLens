@@ -1,0 +1,50 @@
+[vite] connecting...
+%cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold
+[EFFECT] useEffect(userRole) triggered | userRole=null
+[EFFECT] useEffect(userRole) cleanup executed | userRole=null
+[EFFECT] useEffect(userRole) triggered | userRole=null
+[vite] connected.
+[vite] connecting...
+%cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold
+[vite] connected.
+[EFFECT] useEffect(userRole) triggered | userRole=employee
+[LOAD] loadInitialData #1
+source: useEffect(userRole)
+stack: undefined
+time: 1785263389759
+render count: 1
+normalFeed.length: 0
+[API] Request #1 Start | time: 1785263389760 | limit=20 | offset=0 | keyword=
+[EFFECT] useEffect(userRole) cleanup executed | userRole=employee
+[EFFECT] useEffect(userRole) triggered | userRole=employee
+[LOAD] loadInitialData #2
+source: useEffect(userRole)
+stack: undefined
+time: 1785263389762
+render count: 1
+normalFeed.length: 0
+[API] Request #2 Start | time: 1785263389762 | limit=20 | offset=0 | keyword=
+[API] Request #1 Finish | time: 1785263389878 | duration: 118ms
+      Returned 20 articles
+      First ID: https://www.tribuneindia.com/news/business/hilite-groups-yoo-hub-trivandrum-drives-keralas-it-growth-with-5000-new-jobs/
+      Last ID: https://www.stockwatch.live/us/news/d-wave-expands-quantum-computing-partnership-with-att-c90e3fca-2711-4cdf-8ae5-73848997926f
+[STATE] setNormalFeed | Previous = 0 | New = 20 | Type = replacement
+[API] Request #3 Start | time: 1785263390004 | limit=1000 | offset=20 | keyword=
+[API] Request #2 Finish | time: 1785263390052 | duration: 290ms
+      Returned 20 articles
+      First ID: https://www.tribuneindia.com/news/business/hilite-groups-yoo-hub-trivandrum-drives-keralas-it-growth-with-5000-new-jobs/
+      Last ID: https://www.stockwatch.live/us/news/d-wave-expands-quantum-computing-partnership-with-att-c90e3fca-2711-4cdf-8ae5-73848997926f
+[STATE] setNormalFeed | Previous = 20 | New = 20 | Type = replacement
+[API] Request #3 Finish | time: 1785263390150 | duration: 146ms
+      Returned 79 articles
+      First ID: https://www.redhat.com/en/blog/physical-ai-when-machines-start-think-and-act-real-world
+      Last ID: https://theconversation.com/composting-and-water-cremation-how-the-eco-credentials-of-alternatives-to-burial-add-up-285005
+[STATE] setNormalFeed | Previous = 20 | New = 99 | Type = append
+[API] Request #4 Start | time: 1785263390176 | limit=1000 | offset=20 | keyword=
+[API] Request #4 Finish | time: 1785263390291 | duration: 115ms
+      Returned 79 articles
+      First ID: https://www.redhat.com/en/blog/physical-ai-when-machines-start-think-and-act-real-world
+      Last ID: https://theconversation.com/composting-and-water-cremation-how-the-eco-credentials-of-alternatives-to-burial-add-up-285005
+[STATE] setNormalFeed | Previous = 99 | New = 178 | Type = append
+[STATE] setNormalFeed | Previous = 99 | New = 178 | Type = append
+[STATE] setNormalFeed | Previous = 178 | New = 99 | Type = replacement

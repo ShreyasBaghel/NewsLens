@@ -927,25 +927,9 @@ async def _run_pipeline_inner(keyword: Optional[str] = None, force_refresh: bool
     logger.info(f"Keyword generation stage completed in {kw_gen_duration:.3f} seconds.")
     
     t_assembly_start = time.perf_counter()
-    # Calculate keyword counts by aggregating keywords from all currently available articles
-    keyword_counts = {}
-    for art in all_final_articles:
-        kws = art.get("keywords") or []
-        for kw in kws:
-            kw_cleaned = kw.strip()
-            if kw_cleaned:
-                # Format keyword casing for display
-                display_kw = kw_cleaned
-                if display_kw.islower():
-                    if display_kw == "ai":
-                        display_kw = "AI"
-                    else:
-                        display_kw = display_kw.title()
-                keyword_counts[display_kw] = keyword_counts.get(display_kw, 0) + 1
-                
-    # Sort keyword counts by frequency descending, then alphabetically
-    sorted_kws = sorted(keyword_counts.items(), key=lambda item: (-item[1], item[0].lower()))
-    keyword_counts = {kw: cnt for kw, cnt in sorted_kws}
+    # Get global keyword counts directly from the updated in-memory index
+    from app.services.cache import get_global_keyword_counts
+    keyword_counts = get_global_keyword_counts()
 
     from app.services.dataset_manager import StagingDataset
     staging = StagingDataset(keyword=keyword or "Default Dashboard")

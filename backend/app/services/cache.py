@@ -61,6 +61,69 @@ class TTLLRUCache(Generic[K, V]):
         self.misses = 0
 
 # Seen URLs memory cache variables
+# Cache Architecture Decision:
+# cache.json (seen_articles) is the canonical source of truth for all article metadata, including keywords.
+# MySQL article_keywords table acts as a backing store and quick lookup cache for individual article url tags.
+# When building the in-memory index or counting global keywords, if cache.json lacks keywords for a URL,
+# they are fetched from MySQL, merged into the in-memory cache, and written back to cache.json on next save.
+
+import os
+import hashlib
+import json
+from app.database import SessionLocal, CachedPipelineResult, LLMCache, ArticleKeyword, NewsdataUsage, SeenArticleHash
+import logging
+import time
+from collections import OrderedDict
+from datetime import datetime, timedelta
+from typing import Optional, Dict, Any, Tuple, Generic, TypeVar, List
+from app.config import settings
+
+logger = logging.getLogger(__name__)
+
+K = TypeVar('K')
+V = TypeVar('V')
+
+class TTLLRUCache(Generic[K, V]):
+    """
+    A thread-safe-ish (for single-threaded async event loop) bounded LRU cache 
+    with expiration time (TTL).
+    """
+    def __init__(self, maxsize: int = 500, ttl_seconds: float = 1800):
+        self.maxsize = maxsize
+        self.ttl_seconds = ttl_seconds
+        self.cache: OrderedDict[K, Tuple[V, float]] = OrderedDict()
+        self.hits = 0
+        self.misses = 0
+
+    def get(self, key: K) -> Optional[V]:
+        if key not in self.cache:
+            self.misses += 1
+            return None
+        val, ts = self.cache[key]
+        if time.time() - ts > self.ttl_seconds:
+            del self.cache[key]
+            self.misses += 1
+            return None
+        # Move to end to mark as recently used
+        self.cache.move_to_end(key)
+        self.hits += 1
+        return val
+
+    def set(self, key: K, value: V):
+        now = time.time()
+        if key in self.cache:
+            del self.cache[key]
+        elif len(self.cache) >= self.maxsize:
+            # Evict LRU
+            self.cache.popitem(last=False)
+        self.cache[key] = (value, now)
+
+    def clear(self):
+        self.cache.clear()
+        self.hits = 0
+        self.misses = 0
+
+# Seen URLs memory cache variables
 _seen_urls_cache: Optional[Dict[str, Any]] = None
 _seen_urls_dirty: bool = False
 seen_url_hits: int = 0
@@ -69,6 +132,8 @@ seen_url_misses: int = 0
 # In-memory index structures
 _in_memory_keyword_index: Dict[str, List[Dict[str, Any]]] = {}
 _all_cached_articles: List[Dict[str, Any]] = []
+_global_keyword_counts_cache: Optional[Dict[str, int]] = None
+
 
 
 def get_newsdata_usage(date_str: str) -> int:
@@ -374,6 +439,12 @@ def cleanup_stale_keywords_in_cache():
                 logger.info("No stale fallback/placeholder keywords found in database.")
     except Exception as e:
         logger.error(f"Error during database keywords cache pruning: {e}")
+        
+    # Rebuild in-memory index to ensure consistency with search and counts
+    try:
+        build_in_memory_index()
+    except Exception as e:
+        logger.error(f"Error rebuilding in-memory index after cleanup: {e}")
 
 
 def get_all_mysql_cached_articles() -> List[Dict[str, Any]]:
@@ -828,6 +899,48 @@ def is_duplicate_of_any(art: Dict[str, Any], list_of_arts: List[Dict[str, Any]])
             
     return False
 
+import functools
+
+@functools.lru_cache(maxsize=2048)
+def _get_keyword_pattern(kw_lower: str):
+    import re
+    return re.compile(rf"\b{re.escape(kw_lower)}\b")
+
+def is_keyword_match(keyword: str, article: Dict[str, Any]) -> bool:
+    """
+    Canonical source of truth for keyword matching.
+    Returns True if the article matches the keyword (exact tag or safe word-boundary match).
+    """
+    if not keyword:
+        return True
+        
+    kw_lower = keyword.strip().lower()
+    if not kw_lower:
+        return True
+        
+    # 1. Exact match in tags
+    tags = article.get("keywords") or []
+    for tag in tags:
+        if str(tag).strip().lower() == kw_lower:
+            return True
+            
+    # 2. Safe Word Boundary match in Title, Summary, or Tags
+    pattern = _get_keyword_pattern(kw_lower)
+    
+    title = (article.get("title") or "").lower()
+    if pattern.search(title):
+        return True
+        
+    summary = (article.get("summary") or "").lower()
+    if pattern.search(summary):
+        return True
+        
+    for tag in tags:
+        if pattern.search(str(tag).lower()):
+            return True
+            
+    return False
+
 # In-Memory Keyword Search Index Implementations
 def build_in_memory_index():
     global _in_memory_keyword_index, _all_cached_articles, _seen_urls_dirty
@@ -892,6 +1005,11 @@ def build_in_memory_index():
         _in_memory_keyword_index = new_index
         logger.info(f"In-memory index successfully built: {len(_all_cached_articles)} articles, {len(_in_memory_keyword_index)} unique keywords.")
         
+        # Invalidate global keyword counts cache and precompute it
+        global _global_keyword_counts_cache
+        _global_keyword_counts_cache = None
+        get_global_keyword_counts()
+        
         # Save seen articles if merged any to ensure persistence
         if merged_any:
             save_seen_articles_to_disk()
@@ -900,76 +1018,73 @@ def build_in_memory_index():
         logger.error(f"Failed to build in-memory keyword index: {e}")
 
 def get_global_keyword_counts() -> Dict[str, int]:
-    """Aggregate keywords from all articles in cache.json and merge with MySQL."""
+    """Aggregate keywords using the single matching strategy to ensure consistency."""
+    global _in_memory_keyword_index, _all_cached_articles, _global_keyword_counts_cache
+    
+    if _global_keyword_counts_cache is not None:
+        return _global_keyword_counts_cache
+        
     counts = {}
+    unique_kws = list(_in_memory_keyword_index.keys())
+    if not unique_kws:
+        return {}
+        
     try:
-        articles_data = _load_seen_articles()
-        
-        # Fetch keywords from database as a lookup (real articles only)
-        with SessionLocal() as db:
-            rows = db.query(ArticleKeyword).filter(ArticleKeyword.is_mock == 0).all()
-            db_lookup = {}
-            for r in rows:
-                try:
-                    db_lookup[r.url] = json.loads(r.keywords)
-                except Exception:
-                    pass
-        
-        for entry in articles_data.values():
-            if isinstance(entry, dict) and "title" in entry:
-                url = entry.get("url", "")
-                if "-mock.com" in url:
-                    continue # Ignore mock articles
-                kws = entry.get("keywords") or []
-                url = entry.get("url")
-                if not kws and url in db_lookup:
-                    kws = db_lookup[url]
-                for kw in kws:
-                    kw_clean = kw.strip()
-                    if kw_clean:
-                        display_kw = kw_clean
-                        if display_kw.islower():
-                            if display_kw == "ai":
-                                display_kw = "AI"
-                            else:
-                                display_kw = display_kw.title()
-                        counts[display_kw] = counts.get(display_kw, 0) + 1
+        display_kws = {}
+        for kw_lower, exact_articles in _in_memory_keyword_index.items():
+            if not exact_articles:
+                continue
+            display_kw = kw_lower.title()
+            if kw_lower == "ai": display_kw = "AI"
+            elif kw_lower == "ml": display_kw = "ML"
+            elif kw_lower == "vr": display_kw = "VR"
+            elif kw_lower == "ar": display_kw = "AR"
+            elif kw_lower == "iot": display_kw = "IoT"
+            else:
+                found_original = False
+                for art in exact_articles:
+                    for orig_kw in (art.get("keywords") or []):
+                        if orig_kw.strip().lower() == kw_lower:
+                            cleaned = orig_kw.strip()
+                            if not cleaned.islower(): display_kw = cleaned
+                            else: display_kw = cleaned.title()
+                            found_original = True
+                            break
+                    if found_original: break
+            display_kws[kw_lower] = display_kw
+
+        raw_counts = {kw: 0 for kw in unique_kws}
+        for art in _all_cached_articles:
+            for kw_lower in unique_kws:
+                if is_keyword_match(kw_lower, art):
+                    raw_counts[kw_lower] += 1
+
+        for kw_lower, cnt in raw_counts.items():
+            if cnt > 0:
+                counts[display_kws[kw_lower]] = cnt
+                
     except Exception as e:
         logger.error(f"Error gathering global keyword counts: {e}")
         
     # Sort them by frequency descending, then alphabetically
     sorted_kws = sorted(counts.items(), key=lambda item: (-item[1], item[0].lower()))
-    return {kw: cnt for kw, cnt in sorted_kws}
+    _global_keyword_counts_cache = {kw: cnt for kw, cnt in sorted_kws}
+    return _global_keyword_counts_cache
 
 def search_cache_by_keyword(keyword: str) -> List[Dict[str, Any]]:
-    """Instant search using in-memory index or fallback string matching."""
+    """Instant search using single matching strategy."""
     if not keyword:
         return _all_cached_articles
         
     kw_lower = keyword.lower().strip()
     
-    # 1. Try exact keyword match
-    if kw_lower in _in_memory_keyword_index:
-        return _in_memory_keyword_index[kw_lower]
-        
-    # 2. Try partial match on keywords
     matched_articles = []
     seen_urls = set()
-    for indexed_kw, arts in _in_memory_keyword_index.items():
-        if kw_lower in indexed_kw or indexed_kw in kw_lower:
-            for art in arts:
-                if art["url"] not in seen_urls:
-                    matched_articles.append(art)
-                    seen_urls.add(art["url"])
-                    
-    # 3. Fallback to title/summary substring matching
-    if len(matched_articles) < 5:
-        for art in _all_cached_articles:
-            if art["url"] not in seen_urls:
-                title = art.get("title", "").lower()
-                summary = art.get("summary", "").lower()
-                if kw_lower in title or kw_lower in summary:
-                    matched_articles.append(art)
-                    seen_urls.add(art["url"])
-                    
+    
+    for art in _all_cached_articles:
+        if art["url"] not in seen_urls:
+            if is_keyword_match(kw_lower, art):
+                matched_articles.append(art)
+                seen_urls.add(art["url"])
+                
     return matched_articles
