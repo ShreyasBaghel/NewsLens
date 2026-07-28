@@ -3,6 +3,7 @@ from contextlib import asynccontextmanager
 from typing import Optional
 from fastapi import FastAPI, Query, HTTPException, Header, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 from pydantic import BaseModel
 
 from app.config import settings
@@ -82,7 +83,6 @@ def overlay_pinned_articles(payload: dict) -> dict:
             final_pinned.append(art_dict)
             
     final_unpinned = []
-    seen_unpinned = []
     for a in incoming_articles + incoming_pinned:
         art_dict = a if isinstance(a, dict) else a.dict()
         url = art_dict.get("url")
@@ -93,39 +93,13 @@ def overlay_pinned_articles(payload: dict) -> dict:
         if is_duplicate_of_any(art_dict, final_pinned):
             continue
             
-        # Check if it is a duplicate of any already added unpinned article
-        if is_duplicate_of_any(art_dict, seen_unpinned):
-            continue
-            
         art_dict["is_pinned"] = False
         final_unpinned.append(art_dict)
-        seen_unpinned.append(art_dict)
             
     new_payload = dict(payload)
     new_payload["articles"] = final_unpinned
     new_payload["pinned_articles"] = final_pinned
     return new_payload
-
-def get_dashboard_keyword_counts() -> dict:
-    from app.services.dataset_manager import dataset_manager
-    active_dataset = dataset_manager.get_active_dataset()
-    overlaid = overlay_pinned_articles(active_dataset)
-    counts = {}
-    for art in overlaid.get("articles", []) + overlaid.get("pinned_articles", []):
-        art_dict = art if isinstance(art, dict) else (art.dict() if hasattr(art, "dict") else {})
-        kws = art_dict.get("keywords") or []
-        for kw in kws:
-            kw_clean = kw.strip()
-            if kw_clean:
-                display_kw = kw_clean
-                if display_kw.islower():
-                    if display_kw == "ai":
-                        display_kw = "AI"
-                    else:
-                        display_kw = display_kw.title()
-                counts[display_kw] = counts.get(display_kw, 0) + 1
-    sorted_kws = sorted(counts.items(), key=lambda item: (-item[1], item[0].lower()))
-    return {kw: cnt for kw, cnt in sorted_kws}
 
 async def validate_ollama_config() -> bool:
     """
@@ -232,6 +206,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+# Enable GZip compression for API payloads
+app.add_middleware(GZipMiddleware, minimum_size=1000)
 
 @app.get("/api/keywords/suggest")
 async def suggest_keywords(q: str = Query("", description="Prefix search term for autocomplete suggestions")):
@@ -260,7 +236,7 @@ import datetime
 
 def get_news_from_cache_or_default(keyword: Optional[str]) -> dict:
     from app.services.dataset_manager import dataset_manager
-    from app.services.validator import normalize_text_for_matching
+    from app.services.cache import search_cache_by_keyword
     
     active_dataset = dataset_manager.get_active_dataset()
     keyword_clean = keyword.strip() if keyword else ""
@@ -268,39 +244,17 @@ def get_news_from_cache_or_default(keyword: Optional[str]) -> dict:
     if not keyword_clean:
         return active_dataset
         
-    # Split by comma for multi-keyword search
-    keywords_list = [k.strip() for k in keyword_clean.split(',') if k.strip()]
-    keywords_norm = [normalize_text_for_matching(k) for k in keywords_list]
-    
-    matching_articles = []
-    for art in active_dataset.get("articles", []):
-        matched = False
-        art_dict = art if isinstance(art, dict) else art.dict()
-        title_norm = normalize_text_for_matching(art_dict.get("title", ""))
-        summary_norm = normalize_text_for_matching(art_dict.get("summary", ""))
-        tags_norm = [normalize_text_for_matching(tag) for tag in art_dict.get("keywords", [])]
-        
-        for kw_norm in keywords_norm:
-            if kw_norm in tags_norm or (kw_norm and (kw_norm in title_norm or kw_norm in summary_norm)):
-                matched = True
-                break
-                
-        if matched:
-            matching_articles.append(art)
+    # Use the optimized in-memory index for fast unpinned article lookup
+    matching_articles = search_cache_by_keyword(keyword_clean)
             
     matching_pinned = []
+    kw_lower = keyword_clean.lower()
     for art in active_dataset.get("pinned_articles", []):
-        matched = False
-        title_norm = normalize_text_for_matching(art.get("title", ""))
-        summary_norm = normalize_text_for_matching(art.get("summary", ""))
-        tags_norm = [normalize_text_for_matching(tag) for tag in art.get("keywords", [])]
+        title_lower = art.get("title", "").lower()
+        summary_lower = art.get("summary", "").lower()
+        tags_lower = [tag.lower() for tag in art.get("keywords", [])]
         
-        for kw_norm in keywords_norm:
-            if kw_norm in tags_norm or (kw_norm and (kw_norm in title_norm or kw_norm in summary_norm)):
-                matched = True
-                break
-                
-        if matched:
+        if kw_lower in tags_lower or (kw_lower and (kw_lower in title_lower or kw_lower in summary_lower)):
             matching_pinned.append(art)
             
     return {
@@ -314,14 +268,30 @@ def get_news_from_cache_or_default(keyword: Optional[str]) -> dict:
 
 
 @app.get("/api/news", response_model=DashboardPayload)
-async def get_news(keyword: str = Query(None, description="Search keyword or topic")):
-    """
-    Retrieve news payload instantly from cache, avoiding live scraping and LLM invocation.
-    """
+async def get_news(
+    keyword: str = Query(None, description="Search keyword or topic"),
+    limit: Optional[int] = Query(None, description="Max articles to return"),
+    offset: Optional[int] = Query(0, description="Offset for articles")
+):
     try:
         payload = get_news_from_cache_or_default(keyword)
+        
+        # Enforce dashboard limit (top 100) before overlay and pagination
+        # (articles are already sorted by relevance_score descending in cache)
+        max_articles = settings.HOME_FEED_COUNT
+        payload["articles"] = payload["articles"][:max_articles]
+        
         final_payload = overlay_pinned_articles(payload)
-        final_payload["keyword_counts"] = get_dashboard_keyword_counts()
+        
+        # Apply pagination for progressive loading
+        if limit is not None:
+            final_payload["articles"] = final_payload["articles"][offset:offset+limit]
+            
+        # Ensure keyword counts are preserved from active dataset
+        if "keyword_counts" not in final_payload:
+            from app.services.dataset_manager import dataset_manager
+            final_payload["keyword_counts"] = dataset_manager.get_active_dataset().get("keyword_counts", {})
+            
         return final_payload
     except Exception as e:
         logger.error(f"Error in GET /api/news: {str(e)}")
@@ -338,7 +308,9 @@ async def refresh_news(request: RefreshRequest, x_user_role: Optional[str] = Hea
     try:
         payload = await run_pipeline(keyword=request.keyword, force_refresh=True)
         final_payload = overlay_pinned_articles(payload)
-        final_payload["keyword_counts"] = get_dashboard_keyword_counts()
+        if "keyword_counts" not in final_payload:
+            from app.services.dataset_manager import dataset_manager
+            final_payload["keyword_counts"] = dataset_manager.get_active_dataset().get("keyword_counts", {})
         return final_payload
     except Exception as e:
         logger.error(f"Error in POST /api/news/refresh: {str(e)}. Attempting cached fallback recovery...")
@@ -346,7 +318,9 @@ async def refresh_news(request: RefreshRequest, x_user_role: Optional[str] = Hea
             payload = get_news_from_cache_or_default(request.keyword)
             logger.warning(f"Successfully fell back to cached dashboard for POST /api/news/refresh after error: {str(e)}")
             final_payload = overlay_pinned_articles(payload)
-            final_payload["keyword_counts"] = get_dashboard_keyword_counts()
+            if "keyword_counts" not in final_payload:
+                from app.services.dataset_manager import dataset_manager
+                final_payload["keyword_counts"] = dataset_manager.get_active_dataset().get("keyword_counts", {})
             return final_payload
         except Exception as cache_err:
             logger.error(f"Cache fallback lookup also failed: {str(cache_err)}")
@@ -364,7 +338,9 @@ async def pin_article_endpoint(request: PinRequest):
         pin_article(request.article.dict())
         payload = get_news_from_cache_or_default(request.keyword)
         final_payload = overlay_pinned_articles(payload)
-        final_payload["keyword_counts"] = get_dashboard_keyword_counts()
+        if "keyword_counts" not in final_payload:
+            from app.services.dataset_manager import dataset_manager
+            final_payload["keyword_counts"] = dataset_manager.get_active_dataset().get("keyword_counts", {})
         return final_payload
     except Exception as e:
         logger.error(f"Error in POST /api/news/pin: {str(e)}")
@@ -379,7 +355,9 @@ async def unpin_article_endpoint(request: UnpinRequest):
         unpin_article(request.url)
         payload = get_news_from_cache_or_default(request.keyword)
         final_payload = overlay_pinned_articles(payload)
-        final_payload["keyword_counts"] = get_dashboard_keyword_counts()
+        if "keyword_counts" not in final_payload:
+            from app.services.dataset_manager import dataset_manager
+            final_payload["keyword_counts"] = dataset_manager.get_active_dataset().get("keyword_counts", {})
         return final_payload
     except Exception as e:
         logger.error(f"Error in POST /api/news/unpin: {str(e)}")

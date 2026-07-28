@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { ExternalLink, ChevronDown, ChevronUp, Calendar, Newspaper, Info, Pin, Sparkles, Cpu } from 'lucide-react';
 
-export default function ArticleCard({ article, onTogglePin }) {
+const ArticleCard = React.memo(function ArticleCard({ article, onTogglePin }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isIntelExpanded, setIsIntelExpanded] = useState(false);
   const { 
@@ -475,4 +475,6 @@ export default function ArticleCard({ article, onTogglePin }) {
       )}
     </div>
   );
-}
+});
+
+export default ArticleCard;

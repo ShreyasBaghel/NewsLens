@@ -1,34 +1,20 @@
 [
     {
-        "title": "Nvidia is putting its Vera CPUs to work alongside AI agents to speed up chip design",
-        "url": "https://siliconangle.com/2026/07/26/nvidia-putting-vera-cpus-work-alongside-ai-agents-speed-chip-design/",
-        "canonical_url": "https://siliconangle.com/2026/07/26/nvidia-putting-vera-cpus-work-alongside-ai-agents-speed-chip-design/",
-        "source": "SiliconANGLE News",
-        "published_at": "2026-07-27T03:24:03Z",
-        "summary": "Nvidia is using its own Vera CPUs and AI agents, in partnership with Cadence Systems Inc. and Synopsys Inc., to accelerate chip design by optimizing EDA software performance on Nvidia's silicon; the integration of physics-AI libraries into this process aims to further increase automation.",
-        "scraped_content": "UPDATED 23:24 EDT / JULY 26 2026 Nvidia Corp. said tonight it\u2019s now running the chip design software its engineers are using to design the next generation of its graphics processing units, on its own silicon. It\u2019s partnering with Cadence Systems Inc. and Synopsys Inc., the two biggest providers of electronic design automation or EDS software, which are now optimizing their platforms to run on Nvidia\u2019s Vera central processing units to accelerate chip design workloads. The chipmaker said that Cadence\u2019s Jasper, a formal verification platform, and Synopsys VCS, a logical simulation tool that\u2019s used to validate chip designs before fabrication, improved their performance by 1.5 times when running on Vera central processing units. The announcement came as Nvidia revealed that it\u2019s also integrating its PhysicsNeMo physics-AI libraries and a set of GPU math libraries into the Nvidia Agent Toolkit, as part of a push to increase the role of autonomous artificial intelligence agents in the chipmaking process. AI agents can now call accelerated solvers in the same way as they use any other third-party tool, Nvidia said at the 2026 Design Automation Conference in Long Beach, California, today. Nvidia is trying to accelerate the pace of chip development by speeding up EDA workloads while increasing automation in various parts of the design process. The chipmaker explained that simulation, verification and implementation are all crucial steps in the semiconductor design process. Traditionally, these steps have been performed by human engineers, and they are painstaking processes. It\u2019s not uncommon for engineers to",
-        "keyword": "NVIDIA",
-        "is_pinned": true,
-        "company": "NVIDIA",
-        "validation_relevance_score": 95.0,
+        "url": "https://www.firstpost.com/tech/chinas-ai-boom-has-left-nvidia-and-anthropic-on-opposing-sides-14034099.html",
+        "added_at": "2026-07-27 16:44:56",
+        "title": "China's AI boom has left Nvidia and Anthropic on opposing sides",
+        "summary": "China's AI advancements are causing divisions within Silicon Valley, leading to debates on U.S. response regarding access and competition; Anthropic advocates for restrictions due to alleged industrial espionage by Chinese firms.",
         "keywords": [
             "Artificial Intelligence",
-            "Automation",
             "Artificial"
         ],
-        "relevance_score": 3.274,
-        "executive_summary": "Nvidia is integrating its Vera CPUs with AI agents to enhance chip design efficiency, partnering with EDA software providers and incorporating physics-AI libraries for further automation.",
-        "business_implications": [
-            "Increased speed in the initial stages of silicon manufacturing",
-            "Potential reduction in human error during complex simulations",
-            "Enhanced ability to handle increasingly soph0me chip designs"
-        ],
-        "ai_relevance": "AI agents, PhysicsNeMo physics-AI libraries and GPU math libraries are involved.",
-        "industry_categories": [
-            "Semiconductor Manufacturing",
-            "Artificial Intelligence"
-        ],
-        "innovation_score": 90,
-        "sentiment": "Positive"
+        "source": "firstpost",
+        "published_at": "2026-07-27 04:37:27",
+        "is_pinned": true,
+        "relevance_score": 2.8,
+        "company": "NVIDIA",
+        "scraped_content": "The rapid rise of Chinese artificial intelligence has sparked an unusual divide inside Silicon Valley, pitting some of the world\u2019s biggest AI developers against one another over how the United States should respond. Until recently, American companies were widely viewed as having an unassailable lead in frontier AI. But a string of increasingly capable Chinese models, including DeepSeek, Z.ai\u2019s GLM 5.2 and Moonshot AI's Kimi K3, has challenged that assumption. Many of these systems have delivered competitive performance while adopting an open-weight approach, allowing developers to download, modify and deploy the models on their own infrastructure. That shift has triggered a broader debate extending beyond technology and into national security, trade policy and intellectual property. At its centre is a simple question: should Washington restrict access to Chinese AI, or should US companies focus on building better alternatives? Anthropic has emerged as one of the strongest advocates for tighter controls. The Claude AI developer argues that several Chinese AI companies have narrowed the performance gap with American rivals not through independent breakthroughs, but by unlawfully extracting knowledge from frontier US models. \u201cWe have identified industrial-scale campaigns by three AI laboratories\u2014DeepSeek, Moonshot, and MiniMax\u2014to illicitly extract Claude\u2019s capabilities to improve their own models,\u201d Anthropic said. According to the company, those organisations generated more than 16 million interactions with Claude using approximately 24,000 fraudulent accounts, allegedly breaching its terms of service and regional access restrictions. The allegations have not been independently verified, and the companies named by Anthropic have not publicly accepted",
+        "validation_relevance_score": 95.0,
+        "llm_insights": null
     }
 ]

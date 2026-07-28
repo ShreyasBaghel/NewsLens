@@ -18,10 +18,16 @@ function getAuthHeaders() {
  * @param {string} [keyword] Optional keyword search term
  * @returns {Promise<object>} Dashboard payload object
  */
-export async function fetchDashboardData(keyword = '') {
+export async function fetchDashboardData(keyword = '', limit = null, offset = null) {
   const url = new URL(`${API_BASE_URL}/news`);
   if (keyword) {
     url.searchParams.append('keyword', keyword);
+  }
+  if (limit !== null) {
+    url.searchParams.append('limit', limit);
+  }
+  if (offset !== null) {
+    url.searchParams.append('offset', offset);
   }
   
   try {

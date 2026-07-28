@@ -838,10 +838,14 @@ def build_in_memory_index():
         articles = []
         for entry in articles_data.values():
             if isinstance(entry, dict) and "title" in entry:
+                if "source" not in entry:
+                    entry["source"] = "Unknown"
+                if "summary" not in entry:
+                    entry["summary"] = ""
                 articles.append(entry)
                 
-        # Sort by date (newest first)
-        articles.sort(key=lambda x: x.get("published_at") or x.get("added_at") or "", reverse=True)
+        # Sort by relevance score (highest first), then by date (newest first)
+        articles.sort(key=lambda x: (x.get("relevance_score", 0.0), x.get("published_at") or x.get("added_at") or ""), reverse=True)
         _all_cached_articles = articles
         
         # Second pass: query all (url, keywords) rows from article_keywords in database

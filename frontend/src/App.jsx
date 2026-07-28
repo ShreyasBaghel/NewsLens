@@ -100,7 +100,8 @@ export default function App() {
     setIsLoading(true);
     setError(null);
     try {
-      const data = await fetchDashboardData('');
+      // Fetch initial batch of articles for fast First Paint
+      const data = await fetchDashboardData('', 20, 0);
       setNormalFeed(data.articles || []);
       setPinnedArticles(data.pinned_articles || []);
       setLastUpdated(data.last_updated || '');
@@ -109,18 +110,30 @@ export default function App() {
         setKeywordCounts(data.keyword_counts);
       }
       
-      // Load monitored keywords for admin users
-      if (userRole === 'admin') {
-        const adminData = await fetchMonitoredKeywords();
-        setMonitoredKeywords(adminData.keywords || []);
+      // Stop loading early so user sees content immediately
+      setIsLoading(false);
+      
+      // Delay background fetches to prioritize browser rendering of the first batch
+      setTimeout(() => {
+        // Parallelize admin requests
+        if (userRole === 'admin') {
+          Promise.all([
+            fetchMonitoredKeywords(),
+            fetchPipelineStatus()
+          ]).then(([adminData, pipeRes]) => {
+            setMonitoredKeywords(adminData.keywords || []);
+            setPipelineRunStatus(pipeRes.status);
+          }).catch(err => console.error("Admin fetch error:", err));
+        }
         
-        // Also fetch active pipeline status in case it is already running
-        const pipeRes = await fetchPipelineStatus();
-        setPipelineRunStatus(pipeRes.status);
-      }
+        // Background fetch remaining articles
+        fetchDashboardData('', 1000, 20).then(restData => {
+          setNormalFeed(prev => [...prev, ...(restData.articles || [])]);
+        }).catch(err => console.error("Background fetch error:", err));
+      }, 100);
+
     } catch (err) {
       setError(err.message || 'Failed to load news dashboard payload.');
-    } finally {
       setIsLoading(false);
     }
   };
@@ -194,7 +207,8 @@ export default function App() {
     setIsLoading(true);
     setError(null);
     try {
-      const data = await fetchDashboardData(term);
+      // Fetch initial batch
+      const data = await fetchDashboardData(term, 20, 0);
       setSearchResults(data.articles || []);
       setSearchKeyword(term);
       if (data.pinned_articles) {
@@ -206,10 +220,20 @@ export default function App() {
       if (data.last_updated) setLastUpdated(data.last_updated);
       if (data.next_update) setNextUpdate(data.next_update);
       setActiveView('search');
-      setVisibleSearchCount(10);
+      setVisibleSearchCount(20);
+      
+      setIsLoading(false);
+      
+      // Delay background fetch to prioritize browser rendering of the first batch
+      setTimeout(() => {
+        // Background fetch remaining
+        fetchDashboardData(term, 1000, 20).then(restData => {
+          setSearchResults(prev => [...prev, ...(restData.articles || [])]);
+        }).catch(err => console.error("Background search fetch error:", err));
+      }, 100);
+      
     } catch (err) {
       setError(err.message || 'Search failed.');
-    } finally {
       setIsLoading(false);
     }
   };
@@ -516,6 +540,55 @@ export default function App() {
     );
   };
 
+  // --- Optimized Memoized Selectors ---
+  const sourceCounts = React.useMemo(() => {
+    const counts = {};
+    [...normalFeed, ...pinnedArticles].forEach(art => {
+      const src = art.source || 'Unknown';
+      counts[src] = (counts[src] || 0) + 1;
+    });
+    return counts;
+  }, [normalFeed, pinnedArticles]);
+
+  const combinedFeed = React.useMemo(() => {
+    let unfilteredFeed = [...pinnedArticles, ...normalFeed];
+    if (selectedSource) {
+      unfilteredFeed = unfilteredFeed.filter(a => (a.source || 'Unknown') === selectedSource);
+    }
+    return filterText 
+      ? unfilteredFeed.filter(a => 
+          a.title?.toLowerCase().includes(filterText.toLowerCase()) || 
+          a.summary?.toLowerCase().includes(filterText.toLowerCase()) || 
+          a.company?.toLowerCase().includes(filterText.toLowerCase()) || 
+          a.keywords?.some(k => k.toLowerCase().includes(filterText.toLowerCase()))
+        )
+      : unfilteredFeed;
+  }, [normalFeed, pinnedArticles, selectedSource, filterText]);
+
+  const paginatedFeed = React.useMemo(() => 
+    combinedFeed.slice(0, pinnedArticles.length + visibleFeedCount), 
+  [combinedFeed, pinnedArticles.length, visibleFeedCount]);
+
+  const combinedSearch = React.useMemo(() => {
+    let unfilteredSearch = [...pinnedArticles, ...searchResults];
+    if (selectedSource) {
+      unfilteredSearch = unfilteredSearch.filter(a => (a.source || 'Unknown') === selectedSource);
+    }
+    return filterText 
+      ? unfilteredSearch.filter(a => 
+          a.title?.toLowerCase().includes(filterText.toLowerCase()) || 
+          a.summary?.toLowerCase().includes(filterText.toLowerCase()) || 
+          a.company?.toLowerCase().includes(filterText.toLowerCase()) || 
+          a.keywords?.some(k => k.toLowerCase().includes(filterText.toLowerCase()))
+        )
+      : unfilteredSearch;
+  }, [searchResults, pinnedArticles, selectedSource, filterText]);
+
+  const paginatedSearch = React.useMemo(() => 
+    combinedSearch.slice(0, pinnedArticles.length + visibleSearchCount), 
+  [combinedSearch, pinnedArticles.length, visibleSearchCount]);
+  // ------------------------------------
+
   return (
     <div className="app-container">
       {/* Login Screen Gateway */}
@@ -702,11 +775,6 @@ export default function App() {
       <div style={{ display: 'flex', gap: sidebarOpen ? '2rem' : '0', width: '100%', alignItems: 'stretch', position: 'relative', flexGrow: 1, minHeight: 0, overflow: 'hidden', transition: 'gap 0.3s cubic-bezier(0.4, 0, 0.2, 1)' }}>
         
         {(() => {
-          const sourceCounts = {};
-          [...normalFeed, ...pinnedArticles].forEach(art => {
-            const src = art.source || 'Unknown';
-            sourceCounts[src] = (sourceCounts[src] || 0) + 1;
-          });
           return (
             <Sidebar 
               sourceCounts={sourceCounts}
@@ -801,19 +869,6 @@ export default function App() {
               
               {/* Feed View */}
               {activeView === 'feed' && (() => {
-                let unfilteredFeed = [...pinnedArticles, ...normalFeed];
-                if (selectedSource) {
-                  unfilteredFeed = unfilteredFeed.filter(a => (a.source || 'Unknown') === selectedSource);
-                }
-                const combinedFeed = filterText 
-                  ? unfilteredFeed.filter(a => 
-                      a.title?.toLowerCase().includes(filterText.toLowerCase()) || 
-                      a.summary?.toLowerCase().includes(filterText.toLowerCase()) || 
-                      a.company?.toLowerCase().includes(filterText.toLowerCase()) || 
-                      a.keywords?.some(k => k.toLowerCase().includes(filterText.toLowerCase()))
-                    )
-                  : unfilteredFeed;
-                const paginatedFeed = combinedFeed.slice(0, pinnedArticles.length + visibleFeedCount);
                 return (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.5rem' }}>
@@ -890,19 +945,6 @@ export default function App() {
 
               {/* Search View */}
               {activeView === 'search' && (() => {
-                let unfilteredSearch = [...pinnedArticles, ...searchResults];
-                if (selectedSource) {
-                  unfilteredSearch = unfilteredSearch.filter(a => (a.source || 'Unknown') === selectedSource);
-                }
-                const combinedSearch = filterText 
-                  ? unfilteredSearch.filter(a => 
-                      a.title?.toLowerCase().includes(filterText.toLowerCase()) || 
-                      a.summary?.toLowerCase().includes(filterText.toLowerCase()) || 
-                      a.company?.toLowerCase().includes(filterText.toLowerCase()) || 
-                      a.keywords?.some(k => k.toLowerCase().includes(filterText.toLowerCase()))
-                    )
-                  : unfilteredSearch;
-                const paginatedSearch = combinedSearch.slice(0, pinnedArticles.length + visibleSearchCount);
                 return (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.5rem' }}>
