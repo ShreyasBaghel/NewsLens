@@ -25,6 +25,8 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+DEBUG_FEED_TRACE = True
+
 class PinRequest(BaseModel):
     article: Article
     keyword: Optional[str] = None
@@ -100,6 +102,51 @@ def overlay_pinned_articles(payload: dict) -> dict:
     new_payload["articles"] = final_unpinned
     new_payload["pinned_articles"] = final_pinned
     return new_payload
+
+def prepare_dashboard_response(payload: dict, limit: Optional[int] = None, offset: int = 0) -> dict:
+    if DEBUG_FEED_TRACE:
+        logger.info(f"[DEBUG_FEED_TRACE] prepare_dashboard_response | limit={limit}, offset={offset}, keyword={payload.get('keyword')}")
+        logger.info(f"[DEBUG_FEED_TRACE] BEFORE: articles={len(payload.get('articles', []))}, pinned={len(payload.get('pinned_articles', []))}")
+
+    from app.config import settings
+    """
+    # Single source of truth for preparing a dashboard response payload.
+    Ensures that the dashboard constraints (top-100 limit, etc.) are applied
+    without mutating the underlying cached historical dataset.
+    """
+    from app.config import settings
+    
+    # 1. Do not re-sort; dataset is already ranked.
+    # 2. Shallow copy to avoid mutating the historical cache.
+    new_payload = dict(payload)
+    
+    # 3. Overlay pinned articles FIRST. This injects any pinned articles from the store
+    # and removes them from the unpinned 'articles' list.
+    final_payload = overlay_pinned_articles(new_payload)
+    
+    # 4. Apply the Top-100 Limit only for the home dashboard (no keyword or "Default Dashboard").
+    # To ensure the total feed never exceeds 100, limit the unpinned articles to (100 - len(pinned)).
+    kw = final_payload.get("keyword", "")
+    if not kw or kw in ("Default Dashboard", "General Manufacturing & Industry"):
+        max_total = settings.HOME_FEED_COUNT
+        max_unpinned = max(0, max_total - len(final_payload.get("pinned_articles", [])))
+        final_payload["articles"] = final_payload["articles"][:max_unpinned]
+        if DEBUG_FEED_TRACE: logger.info(f"[DEBUG_FEED_TRACE] HOME_FEED_COUNT applied, max_unpinned={max_unpinned}")
+    
+    # 5. Apply pagination for progressive loading.
+    if limit is not None:
+        final_payload["articles"] = final_payload["articles"][offset:offset+limit]
+        if DEBUG_FEED_TRACE: logger.info(f"[DEBUG_FEED_TRACE] Pagination applied, offset={offset}, limit={limit}")
+        
+    # 6. Ensure keyword counts are preserved.
+    if "keyword_counts" not in final_payload:
+        from app.services.dataset_manager import dataset_manager
+        final_payload["keyword_counts"] = dataset_manager.get_active_dataset().get("keyword_counts", {})
+        
+    
+    if DEBUG_FEED_TRACE:
+        logger.info(f"[DEBUG_FEED_TRACE] AFTER: articles={len(final_payload.get('articles', []))}, pinned={len(final_payload.get('pinned_articles', []))}")
+    return final_payload
 
 async def validate_ollama_config() -> bool:
     """
@@ -273,26 +320,11 @@ async def get_news(
     limit: Optional[int] = Query(None, description="Max articles to return"),
     offset: Optional[int] = Query(0, description="Offset for articles")
 ):
+    if DEBUG_FEED_TRACE:
+        logger.info(f"[DEBUG_FEED_TRACE] Endpoint /news | limit={limit}, offset={offset}, keyword={keyword}")
     try:
         payload = get_news_from_cache_or_default(keyword)
-        
-        # Enforce dashboard limit (top 100) before overlay and pagination
-        # (articles are already sorted by relevance_score descending in cache)
-        max_articles = settings.HOME_FEED_COUNT
-        payload["articles"] = payload["articles"][:max_articles]
-        
-        final_payload = overlay_pinned_articles(payload)
-        
-        # Apply pagination for progressive loading
-        if limit is not None:
-            final_payload["articles"] = final_payload["articles"][offset:offset+limit]
-            
-        # Ensure keyword counts are preserved from active dataset
-        if "keyword_counts" not in final_payload:
-            from app.services.dataset_manager import dataset_manager
-            final_payload["keyword_counts"] = dataset_manager.get_active_dataset().get("keyword_counts", {})
-            
-        return final_payload
+        return prepare_dashboard_response(payload, limit=limit, offset=offset)
     except Exception as e:
         logger.error(f"Error in GET /api/news: {str(e)}")
         import traceback
@@ -307,21 +339,13 @@ async def refresh_news(request: RefreshRequest, x_user_role: Optional[str] = Hea
     await verify_admin_role(x_user_role)
     try:
         payload = await run_pipeline(keyword=request.keyword, force_refresh=True)
-        final_payload = overlay_pinned_articles(payload)
-        if "keyword_counts" not in final_payload:
-            from app.services.dataset_manager import dataset_manager
-            final_payload["keyword_counts"] = dataset_manager.get_active_dataset().get("keyword_counts", {})
-        return final_payload
+        return prepare_dashboard_response(payload)
     except Exception as e:
         logger.error(f"Error in POST /api/news/refresh: {str(e)}. Attempting cached fallback recovery...")
         try:
             payload = get_news_from_cache_or_default(request.keyword)
             logger.warning(f"Successfully fell back to cached dashboard for POST /api/news/refresh after error: {str(e)}")
-            final_payload = overlay_pinned_articles(payload)
-            if "keyword_counts" not in final_payload:
-                from app.services.dataset_manager import dataset_manager
-                final_payload["keyword_counts"] = dataset_manager.get_active_dataset().get("keyword_counts", {})
-            return final_payload
+            return prepare_dashboard_response(payload)
         except Exception as cache_err:
             logger.error(f"Cache fallback lookup also failed: {str(cache_err)}")
             raise HTTPException(
@@ -331,34 +355,30 @@ async def refresh_news(request: RefreshRequest, x_user_role: Optional[str] = Hea
 
 @app.post("/api/news/pin", response_model=DashboardPayload)
 async def pin_article_endpoint(request: PinRequest):
+    if DEBUG_FEED_TRACE:
+        logger.info(f"[DEBUG_FEED_TRACE] Endpoint /news/pin | article url={request.article.url}, keyword={request.keyword}")
     """
     Pin an article to the pinned-articles store and update cache state.
     """
     try:
         pin_article(request.article.dict())
         payload = get_news_from_cache_or_default(request.keyword)
-        final_payload = overlay_pinned_articles(payload)
-        if "keyword_counts" not in final_payload:
-            from app.services.dataset_manager import dataset_manager
-            final_payload["keyword_counts"] = dataset_manager.get_active_dataset().get("keyword_counts", {})
-        return final_payload
+        return prepare_dashboard_response(payload)
     except Exception as e:
         logger.error(f"Error in POST /api/news/pin: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Pin error: {str(e)}")
 
 @app.post("/api/news/unpin", response_model=DashboardPayload)
 async def unpin_article_endpoint(request: UnpinRequest):
+    if DEBUG_FEED_TRACE:
+        logger.info(f"[DEBUG_FEED_TRACE] Endpoint /news/unpin | url={request.url}, keyword={request.keyword}")
     """
     Unpin an article from the pinned-articles store and update cache state.
     """
     try:
         unpin_article(request.url)
         payload = get_news_from_cache_or_default(request.keyword)
-        final_payload = overlay_pinned_articles(payload)
-        if "keyword_counts" not in final_payload:
-            from app.services.dataset_manager import dataset_manager
-            final_payload["keyword_counts"] = dataset_manager.get_active_dataset().get("keyword_counts", {})
-        return final_payload
+        return prepare_dashboard_response(payload)
     except Exception as e:
         logger.error(f"Error in POST /api/news/unpin: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Unpin error: {str(e)}")
