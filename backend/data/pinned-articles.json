@@ -1,1 +1,34 @@
-[]
+[
+    {
+        "title": "Nvidia is putting its Vera CPUs to work alongside AI agents to speed up chip design",
+        "url": "https://siliconangle.com/2026/07/26/nvidia-putting-vera-cpus-work-alongside-ai-agents-speed-chip-design/",
+        "canonical_url": "https://siliconangle.com/2026/07/26/nvidia-putting-vera-cpus-work-alongside-ai-agents-speed-chip-design/",
+        "source": "SiliconANGLE News",
+        "published_at": "2026-07-27T03:24:03Z",
+        "summary": "Nvidia is using its own Vera CPUs and AI agents, in partnership with Cadence Systems Inc. and Synopsys Inc., to accelerate chip design by optimizing EDA software performance on Nvidia's silicon; the integration of physics-AI libraries into this process aims to further increase automation.",
+        "scraped_content": "UPDATED 23:24 EDT / JULY 26 2026 Nvidia Corp. said tonight it\u2019s now running the chip design software its engineers are using to design the next generation of its graphics processing units, on its own silicon. It\u2019s partnering with Cadence Systems Inc. and Synopsys Inc., the two biggest providers of electronic design automation or EDS software, which are now optimizing their platforms to run on Nvidia\u2019s Vera central processing units to accelerate chip design workloads. The chipmaker said that Cadence\u2019s Jasper, a formal verification platform, and Synopsys VCS, a logical simulation tool that\u2019s used to validate chip designs before fabrication, improved their performance by 1.5 times when running on Vera central processing units. The announcement came as Nvidia revealed that it\u2019s also integrating its PhysicsNeMo physics-AI libraries and a set of GPU math libraries into the Nvidia Agent Toolkit, as part of a push to increase the role of autonomous artificial intelligence agents in the chipmaking process. AI agents can now call accelerated solvers in the same way as they use any other third-party tool, Nvidia said at the 2026 Design Automation Conference in Long Beach, California, today. Nvidia is trying to accelerate the pace of chip development by speeding up EDA workloads while increasing automation in various parts of the design process. The chipmaker explained that simulation, verification and implementation are all crucial steps in the semiconductor design process. Traditionally, these steps have been performed by human engineers, and they are painstaking processes. It\u2019s not uncommon for engineers to",
+        "keyword": "NVIDIA",
+        "is_pinned": true,
+        "company": "NVIDIA",
+        "validation_relevance_score": 95.0,
+        "keywords": [
+            "Artificial Intelligence",
+            "Automation",
+            "Artificial"
+        ],
+        "relevance_score": 3.274,
+        "executive_summary": "Nvidia is integrating its Vera CPUs with AI agents to enhance chip design efficiency, partnering with EDA software providers and incorporating physics-AI libraries for further automation.",
+        "business_implications": [
+            "Increased speed in the initial stages of silicon manufacturing",
+            "Potential reduction in human error during complex simulations",
+            "Enhanced ability to handle increasingly soph0me chip designs"
+        ],
+        "ai_relevance": "AI agents, PhysicsNeMo physics-AI libraries and GPU math libraries are involved.",
+        "industry_categories": [
+            "Semiconductor Manufacturing",
+            "Artificial Intelligence"
+        ],
+        "innovation_score": 90,
+        "sentiment": "Positive"
+    }
+]

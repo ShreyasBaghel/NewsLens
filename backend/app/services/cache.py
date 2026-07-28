@@ -308,19 +308,33 @@ def get_smart_cached_tags(url: str, current_title: str, current_summary: str) ->
         return json.loads(entry.keywords)
 
 
-def save_smart_cached_tags(url: str, keywords: List[str], title: str = "", summary: str = ""):
+def save_smart_cached_tags(
+    url: str, 
+    keywords: List[str], 
+    title: str = "", 
+    summary: str = "",
+    is_mock: bool = False,
+    relevance_score: float = 0.0,
+    published_at: str = ""
+):
     with SessionLocal() as db:
         entry = db.query(ArticleKeyword).filter(ArticleKeyword.url == url.strip()).first()
         if entry:
             entry.keywords = json.dumps(keywords)
             entry.title = title
             entry.summary = summary
+            entry.is_mock = 1 if is_mock else 0
+            entry.relevance_score = relevance_score
+            entry.published_at = published_at
         else:
             entry = ArticleKeyword(
                 url=url.strip(),
                 keywords=json.dumps(keywords),
                 title=title,
-                summary=summary
+                summary=summary,
+                is_mock=1 if is_mock else 0,
+                relevance_score=relevance_score,
+                published_at=published_at
             )
             db.add(entry)
         db.commit()
@@ -506,6 +520,18 @@ def cache_article(article: Dict[str, Any]):
         "llm_insights": article.get("llm_insights")
     }
     _save_seen_articles(data)
+    
+    # Also save to MySQL database for efficient SQL querying
+    is_mock = "-mock.com" in url
+    save_smart_cached_tags(
+        url=url.strip(),
+        keywords=keywords,
+        title=article.get("title") or "",
+        summary=article.get("summary") or "",
+        is_mock=is_mock,
+        relevance_score=article.get("relevance_score") or 0.0,
+        published_at=article.get("published_at") or ""
+    )
 
 def get_seen_url_cache_stats() -> Tuple[int, int]:
     """Return seen URL cache hits and misses."""
@@ -820,7 +846,8 @@ def build_in_memory_index():
         
         # Second pass: query all (url, keywords) rows from article_keywords in database
         with SessionLocal() as db:
-            rows = db.query(ArticleKeyword).all()
+            # ONLY use real articles for index
+            rows = db.query(ArticleKeyword).filter(ArticleKeyword.is_mock == 0).all()
             db_lookup = {}
             for r in rows:
                 try:
@@ -830,6 +857,8 @@ def build_in_memory_index():
         
         merged_any = False
         for art in _all_cached_articles:
+            if "-mock.com" in art.get("url", ""):
+                continue # ignore mock articles
             url = art.get("url")
             if url:
                 keywords = art.get("keywords")
@@ -845,6 +874,8 @@ def build_in_memory_index():
                         
         new_index = {}
         for art in _all_cached_articles:
+            if "-mock.com" in art.get("url", ""):
+                continue # ignore mock articles
             keywords = art.get("keywords") or []
             for kw in keywords:
                 kw_clean = kw.strip().lower()
@@ -870,9 +901,9 @@ def get_global_keyword_counts() -> Dict[str, int]:
     try:
         articles_data = _load_seen_articles()
         
-        # Fetch keywords from database as a lookup
+        # Fetch keywords from database as a lookup (real articles only)
         with SessionLocal() as db:
-            rows = db.query(ArticleKeyword).all()
+            rows = db.query(ArticleKeyword).filter(ArticleKeyword.is_mock == 0).all()
             db_lookup = {}
             for r in rows:
                 try:
@@ -882,6 +913,9 @@ def get_global_keyword_counts() -> Dict[str, int]:
         
         for entry in articles_data.values():
             if isinstance(entry, dict) and "title" in entry:
+                url = entry.get("url", "")
+                if "-mock.com" in url:
+                    continue # Ignore mock articles
                 kws = entry.get("keywords") or []
                 url = entry.get("url")
                 if not kws and url in db_lookup:

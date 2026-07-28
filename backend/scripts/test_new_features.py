@@ -2,6 +2,7 @@ import sys
 import os
 import asyncio
 import json
+from app.config import settings
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -72,7 +73,7 @@ def test_article_scoring():
 
 def test_target_count_constant():
     print("Testing article count constants...")
-    assert TARGET_ARTICLE_COUNT == 50, f"Expected TARGET_ARTICLE_COUNT to be 50, got {TARGET_ARTICLE_COUNT}"
+    assert TARGET_ARTICLE_COUNT == settings.HOME_FEED_COUNT, f"Expected TARGET_ARTICLE_COUNT to be {settings.HOME_FEED_COUNT}, got {TARGET_ARTICLE_COUNT}"
     print("Article count constants tests passed!")
 
 if __name__ == "__main__":

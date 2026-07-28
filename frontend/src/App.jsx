@@ -228,6 +228,12 @@ export default function App() {
       setSelectedSource(null);
     } else {
       setSelectedSource(source);
+      // Clear keyword filters
+      setChips([]);
+      setSearchKeyword('');
+      setSearchResults([]);
+      setActiveView('feed');
+      setVisibleFeedCount(10);
     }
   };
 

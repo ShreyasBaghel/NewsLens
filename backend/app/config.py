@@ -69,6 +69,14 @@ class Settings(BaseSettings):
         "Microsoft",
         "OpenAI"
     ]
+    
+    # Centralized configuration for article counts
+    HOME_FEED_COUNT: int = 100
+    POOL_MULTIPLIER: int = 3
+    
+    @property
+    def target_pool_size(self) -> int:
+        return self.HOME_FEED_COUNT * self.POOL_MULTIPLIER
 
     @property
     def news_api_key_resolved(self) -> str:

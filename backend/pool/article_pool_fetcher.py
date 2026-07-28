@@ -14,7 +14,11 @@ def resolve_path(relative_path: str) -> str:
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     return os.path.join(base_dir, relative_path)
 
-async def fetch_article_pool(topics: list[str], target_total: int = 150) -> list[dict]:
+from app.config import settings
+
+async def fetch_article_pool(topics: list[str], target_total: int = None) -> list[dict]:
+    if target_total is None:
+        target_total = settings.target_pool_size
     """
     Fetches articles from the configured APIs for each topic in buckets.
     Applies the 7-day de-duplication cache logic.
@@ -77,6 +81,55 @@ async def fetch_article_pool(topics: list[str], target_total: int = 150) -> list
             
         pool.extend(topic_articles)
         
+    # Check if there is an article deficit
+    current_pool_size = len(pool)
+    if current_pool_size < target_total:
+        deficit = target_total - current_pool_size
+        logger.info(f"Current pool size {current_pool_size} is less than target {target_total}. Fetching {deficit} articles using DuckDuckGo to fill the gap.")
+        
+        try:
+            from app.services.ddg_fetcher import fetch_duckduckgo_articles
+            
+            # Distribute deficit among topics
+            deficit_per_topic = (deficit + num_topics - 1) // num_topics
+            
+            for topic in topics:
+                if deficit <= 0:
+                    break
+                
+                ddg_articles = fetch_duckduckgo_articles(topic, max_results=deficit_per_topic)
+                for art in ddg_articles:
+                    if deficit <= 0:
+                        break
+                    
+                    url = art.get("url")
+                    if not url or url in seen_pool_urls:
+                        continue
+                    
+                    if is_url_seen(url):
+                        continue
+                        
+                    if not is_english(art.get("title", ""), art.get("description", "") or ""):
+                        continue
+                        
+                    domain = getNormalizedDomain(url)
+                    record = {
+                        "title": art.get("title", ""),
+                        "url": url,
+                        "source": art.get("source", "DuckDuckGo"),
+                        "source_domain": domain,
+                        "description": art.get("description", "") or "",
+                        "published_at": art.get("published_at", ""),
+                        "topic_bucket": topic,
+                        "fetched_at": datetime.now(timezone.utc).isoformat() + "Z"
+                    }
+                    pool.append(record)
+                    seen_pool_urls.add(url)
+                    deficit -= 1
+                    
+        except Exception as e:
+            logger.error(f"Error during DuckDuckGo fallback fetch: {e}")
+        
     logger.info(f"Article pool fetching complete. Total articles fetched: {len(pool)}")
     return pool
 
@@ -130,7 +183,11 @@ def get_pool_age_hours(path: str = "data/article_pool.json") -> float | None:
         logger.warning(f"Error reading pool age from {full_path}: {e}")
         return None
 
-async def ensure_fresh_pool_on_startup(topics: list[str], target_total: int = 150, max_age_hours: int = 24) -> list[dict]:
+from app.config import settings
+
+async def ensure_fresh_pool_on_startup(topics: list[str], target_total: int = None, max_age_hours: int = 24) -> list[dict]:
+    if target_total is None:
+        target_total = settings.target_pool_size
     """Ensures a fresh pool of articles exists on server startup."""
     from pool.keyword_extractor import extract_keywords_from_pool, save_keywords_to_disk
     from datetime import timedelta

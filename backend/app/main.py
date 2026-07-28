@@ -106,6 +106,27 @@ def overlay_pinned_articles(payload: dict) -> dict:
     new_payload["pinned_articles"] = final_pinned
     return new_payload
 
+def get_dashboard_keyword_counts() -> dict:
+    from app.services.dataset_manager import dataset_manager
+    active_dataset = dataset_manager.get_active_dataset()
+    overlaid = overlay_pinned_articles(active_dataset)
+    counts = {}
+    for art in overlaid.get("articles", []) + overlaid.get("pinned_articles", []):
+        art_dict = art if isinstance(art, dict) else (art.dict() if hasattr(art, "dict") else {})
+        kws = art_dict.get("keywords") or []
+        for kw in kws:
+            kw_clean = kw.strip()
+            if kw_clean:
+                display_kw = kw_clean
+                if display_kw.islower():
+                    if display_kw == "ai":
+                        display_kw = "AI"
+                    else:
+                        display_kw = display_kw.title()
+                counts[display_kw] = counts.get(display_kw, 0) + 1
+    sorted_kws = sorted(counts.items(), key=lambda item: (-item[1], item[0].lower()))
+    return {kw: cnt for kw, cnt in sorted_kws}
+
 async def validate_ollama_config() -> bool:
     """
     Validates that Ollama is running and that the configured model is installed.
@@ -176,79 +197,16 @@ async def lifespan(app: FastAPI):
     from app.services.dataset_manager import dataset_manager
     dataset_manager.load_startup_snapshot()
     
-    from app.services.metadata import is_cache_fresh, get_metadata
-    
-    active = dataset_manager.get_active_dataset()
-    has_articles = bool(active.get("articles"))
-    
-    last_refresh = get_metadata("last_pipeline_run")
-    
-    if has_articles:
-        logger.info("[STARTUP] Dashboard loaded from MySQL")
-        
-    logger.info(f"[STARTUP] Last refresh: {last_refresh or 'Never'}")
-    logger.info(f"[STARTUP] Refresh interval: {settings.REFRESH_INTERVAL_HOURS} hours")
-    
-    pool_age = get_pool_age_hours()
-    if pool_age is not None:
-        logger.info(f"[STARTUP] Pool age: {pool_age:.2f} hours")
-    else:
-        logger.info("[STARTUP] Pool age: Unknown (missing/invalid)")
-
-    from app.services.dataset_manager import snapshot_has_mock_content
-    pinned_articles = active.get("pinned_articles", [])
-    has_mock = snapshot_has_mock_content(pinned_articles)
-
-    if has_mock:
-        logger.warning("[STARTUP] Cached snapshot contains mock/placeholder content — forcing refresh.")
-
-    if is_cache_fresh() and has_articles and not has_mock:
-        logger.info("[STARTUP] Pool refresh skipped")
-        logger.info("[STARTUP] Using cached dashboard")
-        
-        try:
-            load_keywords_cache()
-            from app.services.cache import build_in_memory_index
-            build_in_memory_index()
-            from app.services.cache import get_all_aggregated_keywords, get_global_keyword_counts
-            agg = get_all_aggregated_keywords()
-            kw_counts = get_global_keyword_counts()
-            logger.info(f"[STARTUP] Total unique keywords available: {len(agg)} from article_keywords table, {len(kw_counts)} from cache.json.")
-        except Exception as e:
-            logger.error(f"Failed to load caches on startup: {str(e)}")
-    else:
-        logger.info("[STARTUP] Pool refresh required")
-        logger.info("Ensuring fresh article pool on startup...")
-        
-        topics = [
-            "Dalmia Cement",
-            "AI",
-            "machine learning",
-            "robotics & automation",
-            "manufacturing",
-            "cement industry"
-        ]
-        
-        try:
-            from app.services.monitored_keywords import load_monitored_keywords
-            admin_kws = load_monitored_keywords()
-            merged_topics = []
-            seen_topics = set()
-            for t in topics + admin_kws:
-                if t.lower() not in seen_topics:
-                    merged_topics.append(t)
-                    seen_topics.add(t.lower())
-                    
-            await ensure_fresh_pool_on_startup(merged_topics, max_age_hours=settings.REFRESH_INTERVAL_HOURS)
-            load_keywords_cache()
-            from app.services.cache import build_in_memory_index
-            build_in_memory_index()
-            from app.services.cache import get_all_aggregated_keywords, get_global_keyword_counts
-            agg = get_all_aggregated_keywords()
-            kw_counts = get_global_keyword_counts()
-            logger.info(f"[STARTUP] Total unique keywords available: {len(agg)} from article_keywords table, {len(kw_counts)} from cache.json.")
-        except Exception as e:
-            logger.error(f"Failed to ensure fresh pool on startup: {str(e)}")
+    try:
+        load_keywords_cache()
+        from app.services.cache import build_in_memory_index
+        build_in_memory_index()
+        from app.services.cache import get_all_aggregated_keywords, get_global_keyword_counts
+        agg = get_all_aggregated_keywords()
+        kw_counts = get_global_keyword_counts()
+        logger.info(f"[STARTUP] Total unique keywords available: {len(agg)} from article_keywords table, {len(kw_counts)} from cache.json.")
+    except Exception as e:
+        logger.error(f"Failed to load caches on startup: {str(e)}")
 
     logger.info("Starting background scheduler...")
     start_scheduler()
@@ -362,7 +320,9 @@ async def get_news(keyword: str = Query(None, description="Search keyword or top
     """
     try:
         payload = get_news_from_cache_or_default(keyword)
-        return overlay_pinned_articles(payload)
+        final_payload = overlay_pinned_articles(payload)
+        final_payload["keyword_counts"] = get_dashboard_keyword_counts()
+        return final_payload
     except Exception as e:
         logger.error(f"Error in GET /api/news: {str(e)}")
         import traceback
@@ -377,13 +337,17 @@ async def refresh_news(request: RefreshRequest, x_user_role: Optional[str] = Hea
     await verify_admin_role(x_user_role)
     try:
         payload = await run_pipeline(keyword=request.keyword, force_refresh=True)
-        return overlay_pinned_articles(payload)
+        final_payload = overlay_pinned_articles(payload)
+        final_payload["keyword_counts"] = get_dashboard_keyword_counts()
+        return final_payload
     except Exception as e:
         logger.error(f"Error in POST /api/news/refresh: {str(e)}. Attempting cached fallback recovery...")
         try:
             payload = get_news_from_cache_or_default(request.keyword)
             logger.warning(f"Successfully fell back to cached dashboard for POST /api/news/refresh after error: {str(e)}")
-            return overlay_pinned_articles(payload)
+            final_payload = overlay_pinned_articles(payload)
+            final_payload["keyword_counts"] = get_dashboard_keyword_counts()
+            return final_payload
         except Exception as cache_err:
             logger.error(f"Cache fallback lookup also failed: {str(cache_err)}")
             raise HTTPException(
@@ -399,7 +363,9 @@ async def pin_article_endpoint(request: PinRequest):
     try:
         pin_article(request.article.dict())
         payload = get_news_from_cache_or_default(request.keyword)
-        return overlay_pinned_articles(payload)
+        final_payload = overlay_pinned_articles(payload)
+        final_payload["keyword_counts"] = get_dashboard_keyword_counts()
+        return final_payload
     except Exception as e:
         logger.error(f"Error in POST /api/news/pin: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Pin error: {str(e)}")
@@ -412,7 +378,9 @@ async def unpin_article_endpoint(request: UnpinRequest):
     try:
         unpin_article(request.url)
         payload = get_news_from_cache_or_default(request.keyword)
-        return overlay_pinned_articles(payload)
+        final_payload = overlay_pinned_articles(payload)
+        final_payload["keyword_counts"] = get_dashboard_keyword_counts()
+        return final_payload
     except Exception as e:
         logger.error(f"Error in POST /api/news/unpin: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Unpin error: {str(e)}")

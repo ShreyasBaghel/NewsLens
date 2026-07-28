@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine, Column, String, Integer, DateTime, Text
+from sqlalchemy import create_engine, Column, String, Integer, DateTime, Text, Float
 from sqlalchemy.orm import declarative_base, sessionmaker
 from sqlalchemy.sql import func
 from app.config import settings
@@ -38,6 +38,9 @@ class ArticleKeyword(Base):
     keywords = Column(Text(4294967295), nullable=False)
     title = Column(String(1024))
     summary = Column(Text(4294967295))
+    is_mock = Column(Integer, default=0) # using Integer as boolean fallback
+    relevance_score = Column(Float, default=0.0) 
+    published_at = Column(String(255))
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
 class SystemMetadata(Base):

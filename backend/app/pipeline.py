@@ -44,7 +44,7 @@ pipeline_status = {
     "message": ""
 }
 
-TARGET_ARTICLE_COUNT = 50
+TARGET_ARTICLE_COUNT = settings.HOME_FEED_COUNT
 
 import re
 
@@ -366,7 +366,7 @@ def _generate_fallback_article(keyword: str, used_urls: set) -> Dict[str, Any]:
         "is_pinned": False,
         "company": None,
         "validation_relevance_score": 80.0,
-        "keywords": [keyword, "smart automation", "industry insights"]
+        "keywords": []
     }
 
 import os
@@ -719,45 +719,7 @@ async def _run_pipeline_inner(keyword: Optional[str] = None, force_refresh: bool
                                 
                     page += 1
         
-            # 4.5. Fallback to previously stored MySQL articles for shortfall
-            if len(summarized_articles) < TARGET_ARTICLE_COUNT:
-                shortfall = TARGET_ARTICLE_COUNT - len(summarized_articles)
-                logger.info(f"Shortfall persistent after live fallback. Backfilling {shortfall} articles from MySQL cache.")
-                from app.services.cache import get_all_mysql_cached_articles
-                cached_arts = get_all_mysql_cached_articles()
-                
-                # Sort cached articles to prioritize most recent and relevant
-                def sort_key(art):
-                    score = art.get("validation_relevance_score") or art.get("relevance_score", 0.0)
-                    if not isinstance(score, (int, float)):
-                        score = 0.0
-                    pub = art.get("published_at", "")
-                    return (score, pub)
-                    
-                cached_arts = sorted(cached_arts, key=sort_key, reverse=True)
-                
-                for art in cached_arts:
-                    if len(summarized_articles) >= TARGET_ARTICLE_COUNT:
-                        break
-                    url = art.get("url")
-                    if url and url not in used_urls:
-                        summarized_articles.append(art)
-                        used_urls.add(url)
-                        domain = getNormalizedDomain(url)
-                        if domain:
-                            used_domains.add(domain)
-                        add_seen_url(url, title=art.get("title"), published_at=art.get("published_at"))
-                        stats["accepted_articles"] += 1
-
-            # 5. Last Resort Fallback (if we still have less than TARGET_ARTICLE_COUNT, backfill with mock articles)
-            while len(summarized_articles) < TARGET_ARTICLE_COUNT:
-                shortfall = TARGET_ARTICLE_COUNT - len(summarized_articles)
-                logger.info(f"Shortfall persistent after live fallback. Backfilling {shortfall} articles with high-quality generated mocks.")
-                mock_art = _generate_fallback_article(keyword or "Manufacturing", used_urls)
-                summarized_articles.append(mock_art)
-                used_urls.add(mock_art["url"])
-                add_seen_url(mock_art["url"], title=mock_art.get("title"), published_at=mock_art.get("published_at"))
-                stats["accepted_articles"] += 1
+            # [Removed old fallback logic to prioritize historical real articles via SQL later in pipeline]
         
             # 6. Scrape & Summarize pinned articles with round-robin selection and validation
             summarized_pinned = []
@@ -819,18 +781,47 @@ async def _run_pipeline_inner(keyword: Optional[str] = None, force_refresh: bool
         score = calculate_article_score(art, keyword or "Default", seen_domains_scoring)
         art["relevance_score"] = score
         
-    # Order by relevance_score descending
-    summarized_articles = sorted(
-        summarized_articles,
-        key=lambda x: x.get("relevance_score", 0.0),
-        reverse=True
-    )
-    
     # Calculate relevance_score for pinned articles
     seen_domains_scoring_pinned = set()
     for art in summarized_pinned:
         score = calculate_article_score(art, art.get("company", "technology") or "technology", seen_domains_scoring_pinned)
         art["relevance_score"] = score
+        
+    # Save newly scraped articles to DB so they are included in Top 100 query
+    from app.services.cache import cache_article, _load_seen_articles
+    for art in summarized_articles + summarized_pinned:
+        cache_article(art)
+
+    # Now, query the database for the Top 100 REAL articles
+    from app.database import SessionLocal, ArticleKeyword
+    top_100_urls = []
+    with SessionLocal() as db:
+        top_real_rows = db.query(ArticleKeyword.url).filter(ArticleKeyword.is_mock == 0).order_by(ArticleKeyword.relevance_score.desc(), ArticleKeyword.published_at.desc()).limit(TARGET_ARTICLE_COUNT).all()
+        top_100_urls = [r[0] for r in top_real_rows]
+        
+    # Reconstruct the full article objects from cache.json
+    all_cached_data = _load_seen_articles()
+    final_summarized_articles = []
+    
+    # We must preserve the exact sorting returned by SQL
+    for url in top_100_urls:
+        from app.services.cache import _get_url_hash
+        uhash = _get_url_hash(url)
+        if uhash in all_cached_data:
+            final_summarized_articles.append(all_cached_data[uhash])
+            
+    # If still shortfall (fewer than 100 real articles exist in the entire DB), mock fallback
+    if len(final_summarized_articles) < TARGET_ARTICLE_COUNT:
+        shortfall = TARGET_ARTICLE_COUNT - len(final_summarized_articles)
+        logger.info(f"Only {len(final_summarized_articles)} real articles found in DB. Backfilling {shortfall} with mocks.")
+        for _ in range(shortfall):
+            mock_art = _generate_fallback_article(keyword or "Manufacturing", used_urls)
+            mock_art["relevance_score"] = 0.0 # Lowest priority
+            final_summarized_articles.append(mock_art)
+            used_urls.add(mock_art["url"])
+            cache_article(mock_art) # save mock to db so it is cached
+            
+    summarized_articles = final_summarized_articles
 
     # Calculate updates
     last_updated_dt = datetime.now(timezone.utc)

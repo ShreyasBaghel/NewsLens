@@ -39,7 +39,7 @@ def start_scheduler():
     """Initialize and start the background scheduler."""
     if not scheduler.running:
         # Schedule the pipeline to run periodically
-        scheduler.add_job(
+        job = scheduler.add_job(
             scheduled_pipeline_run,
             'interval',
             hours=settings.REFRESH_INTERVAL_HOURS,
@@ -47,37 +47,34 @@ def start_scheduler():
             replace_existing=True
         )
         
-        from app.services.metadata import is_cache_fresh
-        from app.services.dataset_manager import dataset_manager, snapshot_has_mock_content
+        logger.info("[Startup]")
+        logger.info("Loading latest dashboard snapshot...")
         
+        from app.services.dataset_manager import dataset_manager
         active = dataset_manager.get_active_dataset()
         has_articles = bool(active.get("articles"))
-        pinned_articles = active.get("pinned_articles", [])
-        has_mock = snapshot_has_mock_content(pinned_articles)
         
-        if not is_cache_fresh() or not has_articles or has_mock:
-            if not has_articles:
-                logger.warning("[STARTUP] Dashboard snapshot missing or invalid. Starting recovery pipeline...")
-            elif has_mock:
-                # Logging for this handled in scheduled_pipeline_run itself or we can add it here too
-                # Main.py logs it, scheduled_pipeline_run logs it. But start_scheduler schedules it, so let's log it here too if needed, wait, we don't strictly need to log it here if main.py already does, but let's be explicit
-                logger.warning("[STARTUP] Cached snapshot contains mock/placeholder content — forcing initial refresh.")
-            else:
-                logger.info("[STARTUP] Cache is stale. Running initial refresh...")
-                
-            # Trigger an initial run immediately on startup
-            scheduler.add_job(
-                scheduled_pipeline_run,
-                kwargs={'trigger_type': 'Startup'},
-                id='startup_pipeline_job'
-            )
+        if has_articles:
+            logger.info("Snapshot loaded successfully.")
         else:
-            logger.info("[STARTUP] Dashboard snapshot found and today's refresh completed.")
-            logger.info("[STARTUP] Skipping startup refresh.")
-            logger.info("[STARTUP] Serving dashboard from MySQL.")
+            logger.warning("Snapshot loaded, but it is empty.")
+            
+        logger.info("Automatic scraping: DISABLED")
+        logger.info("Serving stored snapshot.")
         
         scheduler.start()
         logger.info("Background news pipeline scheduler started.")
+
+        # Retrieve the job after the scheduler has started so it is fully initialized
+        active_job = scheduler.get_job('default_pipeline_job')
+        
+        # Determine the next run time safely
+        next_run = "Unknown"
+        if active_job and getattr(active_job, 'next_run_time', None):
+            next_run = active_job.next_run_time.strftime("%I:%M %p")
+            
+        logger.info("Next scheduled APScheduler run:")
+        logger.info(f"{next_run}")
 
 def shutdown_scheduler():
     """Shut down the background scheduler."""

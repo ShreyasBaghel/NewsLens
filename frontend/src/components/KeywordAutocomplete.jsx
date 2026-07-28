@@ -237,8 +237,22 @@ export default function KeywordAutocomplete({ onSearch, onClear, onInputChange, 
                   onClick={() => handleSelectKeyword(item)}
                   className="tag-item"
                 >
-                  <span>{item}</span>
-                  <Tag size={12} style={{ color: 'var(--color-secondary)' }} />
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                    <span>{item}</span>
+                    {keywordCounts[item] !== undefined && (
+                      <span style={{
+                        fontSize: '0.7rem',
+                        padding: '0.1rem 0.4rem',
+                        borderRadius: '100px',
+                        background: 'var(--border-color)',
+                        color: 'var(--text-secondary)',
+                        fontWeight: 600
+                      }}>
+                        {keywordCounts[item]}
+                      </span>
+                    )}
+                  </span>
+                  <Tag size={12} style={{ color: 'var(--color-secondary)', flexShrink: 0 }} />
                 </div>
               ))}
             </div>
