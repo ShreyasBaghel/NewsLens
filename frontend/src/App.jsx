@@ -177,22 +177,34 @@ export default function App() {
     }
   }, [userRole]);
 
+  const updateChipsAndSearch = React.useCallback((newChipsOrUpdater) => {
+    setChips(prevChips => {
+      const nextChips = typeof newChipsOrUpdater === 'function' ? newChipsOrUpdater(prevChips) : newChipsOrUpdater;
+      
+      React.startTransition(() => {
+        setAppliedChips(nextChips);
+        if (nextChips.length > 0) {
+          setActiveView('search');
+          setVisibleSearchCount(20);
+        } else {
+          setActiveView(prevView => prevView === 'search' ? 'feed' : prevView);
+        }
+      });
+      
+      return nextChips;
+    });
+  }, []);
+
   useEffect(() => {
     const handleSearchEvent = (e) => {
       const tag = e.detail;
-      setChips(prev => {
-         const newChips = prev.includes(tag) ? prev : [...prev, tag];
-         return newChips;
-      });
-      setAppliedChips(prev => {
-         const newChips = prev.includes(tag) ? prev : [...prev, tag];
-         handleApplySearch(newChips.join(','));
-         return newChips;
+      updateChipsAndSearch(prev => {
+         return prev.includes(tag) ? prev : [...prev, tag];
       });
     };
     window.addEventListener('search-keyword', handleSearchEvent);
     return () => window.removeEventListener('search-keyword', handleSearchEvent);
-  }, []);
+  }, [updateChipsAndSearch]);
 
   // Poll pipeline progress status when it's running
   useEffect(() => {
@@ -244,24 +256,38 @@ export default function App() {
     // left for legacy
   };
 
-  const handleApplySearch = (term) => {
-    setAppliedChips(chips);
-    if (term || chips.length > 0) {
-      setActiveView('search');
-      setVisibleSearchCount(20);
-    } else {
-      setActiveView('feed');
-    }
+  const handleApplySearch = () => {
+    React.startTransition(() => {
+      setAppliedChips(chips);
+      if (chips.length > 0 || filterText) {
+        setActiveView('search');
+        setVisibleSearchCount(20);
+      } else {
+        setActiveView('feed');
+      }
+    });
   };
 
   const handleClear = () => {
     setChips([]);
-    setAppliedChips([]);
-    setSelectedSource(null);
-    setFilterText('');
-    setActiveView('feed');
-    setVisibleFeedCount(10);
+    React.startTransition(() => {
+      setAppliedChips([]);
+      setFilterText('');
+      setActiveView('feed');
+      setVisibleFeedCount(10);
+    });
   };
+
+  const handleFilterTextChange = React.useCallback((text) => {
+    React.startTransition(() => {
+      setFilterText(text);
+      if (text) {
+        setActiveView('search');
+      } else if (chips.length === 0) {
+        setActiveView('feed');
+      }
+    });
+  }, [chips.length]);
 
   const handleSelectSidebarSource = (source) => {
     if (selectedSource === source) {
@@ -572,27 +598,20 @@ export default function App() {
   };
 
   // --- Optimized Memoized Selectors ---
-  const draftDataset = React.useMemo(() => {
-    let unfiltered = [...normalFeed];
-    if (selectedSource) {
-      unfiltered = unfiltered.filter(a => (a.source || 'Unknown') === selectedSource);
-    }
-    if (chips.length > 0) {
-      unfiltered = unfiltered.filter(a => 
-        chips.every(chip => 
-          a.keywords && a.keywords.map(k => k.toLowerCase()).includes(chip.toLowerCase())
-        )
-      );
-    }
-    return filterText 
-      ? unfiltered.filter(a => 
-          a.title?.toLowerCase().includes(filterText.toLowerCase()) || 
-          a.summary?.toLowerCase().includes(filterText.toLowerCase()) || 
-          a.company?.toLowerCase().includes(filterText.toLowerCase()) || 
-          a.keywords?.some(k => k.toLowerCase().includes(filterText.toLowerCase()))
-        )
-      : unfiltered;
-  }, [normalFeed, selectedSource, chips, filterText]);
+  const keywordIndex = React.useMemo(() => {
+    const index = {};
+    normalFeed.forEach(a => {
+      const id = a.id || a.url;
+      if (a.keywords && Array.isArray(a.keywords)) {
+        a.keywords.forEach(kw => {
+          const lowerKw = kw.toLowerCase();
+          if (!index[lowerKw]) index[lowerKw] = new Set();
+          index[lowerKw].add(id);
+        });
+      }
+    });
+    return index;
+  }, [normalFeed]);
 
   const currentDataset = React.useMemo(() => {
     let unfiltered = [...normalFeed];
@@ -600,11 +619,14 @@ export default function App() {
       unfiltered = unfiltered.filter(a => (a.source || 'Unknown') === selectedSource);
     }
     if (appliedChips.length > 0) {
-      unfiltered = unfiltered.filter(a => 
-        appliedChips.every(chip => 
-          a.keywords && a.keywords.map(k => k.toLowerCase()).includes(chip.toLowerCase())
-        )
-      );
+      const matchingIds = new Set();
+      appliedChips.forEach(chip => {
+        const lowerKw = chip.toLowerCase();
+        if (keywordIndex[lowerKw]) {
+          keywordIndex[lowerKw].forEach(id => matchingIds.add(id));
+        }
+      });
+      unfiltered = unfiltered.filter(a => matchingIds.has(a.id || a.url));
     }
     return filterText 
       ? unfiltered.filter(a => 
@@ -614,7 +636,7 @@ export default function App() {
           a.keywords?.some(k => k.toLowerCase().includes(filterText.toLowerCase()))
         )
       : unfiltered;
-  }, [normalFeed, selectedSource, appliedChips, filterText]);
+  }, [normalFeed, selectedSource, appliedChips, filterText, keywordIndex]);
 
   const filteredPinnedArticles = React.useMemo(() => {
     let unfiltered = [...pinnedArticles];
@@ -623,7 +645,7 @@ export default function App() {
     }
     if (appliedChips.length > 0) {
       unfiltered = unfiltered.filter(a => 
-        appliedChips.every(chip => 
+        appliedChips.some(chip => 
           a.keywords && a.keywords.map(k => k.toLowerCase()).includes(chip.toLowerCase())
         )
       );
@@ -649,7 +671,19 @@ export default function App() {
 
   const keywordCounts = React.useMemo(() => {
     const counts = {};
-    draftDataset.forEach(art => {
+    let baseDataset = normalFeed;
+    if (selectedSource) {
+      baseDataset = baseDataset.filter(a => (a.source || 'Unknown') === selectedSource);
+    }
+    if (filterText) {
+      baseDataset = baseDataset.filter(a => 
+        a.title?.toLowerCase().includes(filterText.toLowerCase()) || 
+        a.summary?.toLowerCase().includes(filterText.toLowerCase()) || 
+        a.company?.toLowerCase().includes(filterText.toLowerCase()) || 
+        a.keywords?.some(k => k.toLowerCase().includes(filterText.toLowerCase()))
+      );
+    }
+    baseDataset.forEach(art => {
       if (art.keywords && Array.isArray(art.keywords)) {
         art.keywords.forEach(kw => {
           counts[kw] = (counts[kw] || 0) + 1;
@@ -657,7 +691,7 @@ export default function App() {
       }
     });
     return counts;
-  }, [draftDataset]);
+  }, [normalFeed, selectedSource, filterText]);
 
   const paginatedFeed = React.useMemo(() => {
     return currentDataset.slice(0, visibleFeedCount);
@@ -821,10 +855,10 @@ export default function App() {
           onSearch={handleSearch} 
           onApplySearch={handleApplySearch}
           onClear={handleClear} 
-          onInputChange={setFilterText}
+          onInputChange={handleFilterTextChange}
           isLoading={isLoading || isRefreshing} 
           chips={chips}
-          setChips={setChips}
+          setChips={updateChipsAndSearch}
           keywordCounts={keywordCounts}
         />
       </div>

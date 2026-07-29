@@ -54,5 +54,13 @@
     {
         "keyword": "bharat",
         "is_processed": true
+    },
+    {
+        "keyword": "ai",
+        "is_processed": false
+    },
+    {
+        "keyword": "opencv",
+        "is_processed": false
     }
 ]
