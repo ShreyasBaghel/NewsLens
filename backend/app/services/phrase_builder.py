@@ -32,9 +32,12 @@ async def expand_keyword(keyword: str) -> List[str]:
         return _get_fallback_phrases(keyword_clean)
         
     system_prompt = (
-        "You are a professional search optimizer. Expand the input keyword or topic into exactly "
-        "3 to 4 distinct, professional search queries optimized for news search engines (like NewsAPI or Google News). "
-        "The queries should be concise (2-4 words) and target different facets (e.g. technology, market, sustainability). "
+        "You are a professional search optimizer specializing in Artificial Intelligence. "
+        "Expand the input keyword or topic into exactly 3 to 4 distinct, professional search queries optimized for news search engines. "
+        "The queries must be centered around AI topics (e.g. Artificial Intelligence, Generative AI, Machine Learning, Large Language Models, AI software, AI infrastructure). "
+        "For example, if the keyword is 'Microsoft', return 'Microsoft AI', 'Microsoft Copilot', 'Microsoft Generative AI', etc. "
+        "Do NOT return generic technology or business searches (avoid terms like stock, earnings, gaming, windows, etc). "
+        "The queries should be concise (2-4 words) and highly relevant to AI innovation or strategy. "
         "Return ONLY a JSON array of strings. Do not include markdown codeblocks or extra text."
     )
     

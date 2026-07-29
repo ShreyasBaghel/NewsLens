@@ -77,6 +77,7 @@ export default function App() {
   // Sidebar & search state
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [chips, setChips] = useState([]);
+  const [appliedChips, setAppliedChips] = useState([]);
   const [selectedSource, setSelectedSource] = useState(null);
   
   // Admin dashboard state
@@ -181,7 +182,11 @@ export default function App() {
       const tag = e.detail;
       setChips(prev => {
          const newChips = prev.includes(tag) ? prev : [...prev, tag];
-         handleSearch(newChips.join(','));
+         return newChips;
+      });
+      setAppliedChips(prev => {
+         const newChips = prev.includes(tag) ? prev : [...prev, tag];
+         handleApplySearch(newChips.join(','));
          return newChips;
       });
     };
@@ -236,7 +241,12 @@ export default function App() {
   };
 
   const handleSearch = async (term) => {
-    if (term) {
+    // left for legacy
+  };
+
+  const handleApplySearch = (term) => {
+    setAppliedChips(chips);
+    if (term || chips.length > 0) {
       setActiveView('search');
       setVisibleSearchCount(20);
     } else {
@@ -246,6 +256,7 @@ export default function App() {
 
   const handleClear = () => {
     setChips([]);
+    setAppliedChips([]);
     setSelectedSource(null);
     setFilterText('');
     setActiveView('feed');
@@ -259,6 +270,7 @@ export default function App() {
       setSelectedSource(source);
       // Clear keyword filters
       setChips([]);
+      setAppliedChips([]);
       setFilterText('');
       setActiveView('feed');
       setVisibleFeedCount(10);
@@ -268,7 +280,7 @@ export default function App() {
   const handleTogglePin = async (article) => {
     // Optimistic UI update - prevent whole feed replacement
     const updateFeed = (feed) => feed.map(a => 
-      (a.id === article.id || a.url === article.url) 
+      ((a.id && article.id && a.id === article.id) || (a.url && article.url && a.url === article.url)) 
         ? { ...a, is_pinned: !article.is_pinned } 
         : a
     );
@@ -286,12 +298,15 @@ export default function App() {
       if (data.pinned_articles) {
         setPinnedArticles(data.pinned_articles);
       }
+      if (data.articles) {
+        setNormalFeed(data.articles);
+      }
       if (data.last_updated) setLastUpdated(data.last_updated);
       if (data.next_update) setNextUpdate(data.next_update);
     } catch (err) {
       // Revert optimistic update
       const revertFeed = (feed) => feed.map(a => 
-        (a.id === article.id || a.url === article.url) 
+        ((a.id && article.id && a.id === article.id) || (a.url && article.url && a.url === article.url)) 
           ? { ...a, is_pinned: article.is_pinned } 
           : a
       );
@@ -557,8 +572,8 @@ export default function App() {
   };
 
   // --- Optimized Memoized Selectors ---
-  const currentDataset = React.useMemo(() => {
-    let unfiltered = [...pinnedArticles, ...normalFeed];
+  const draftDataset = React.useMemo(() => {
+    let unfiltered = [...normalFeed];
     if (selectedSource) {
       unfiltered = unfiltered.filter(a => (a.source || 'Unknown') === selectedSource);
     }
@@ -577,7 +592,51 @@ export default function App() {
           a.keywords?.some(k => k.toLowerCase().includes(filterText.toLowerCase()))
         )
       : unfiltered;
-  }, [normalFeed, pinnedArticles, selectedSource, chips, filterText]);
+  }, [normalFeed, selectedSource, chips, filterText]);
+
+  const currentDataset = React.useMemo(() => {
+    let unfiltered = [...normalFeed];
+    if (selectedSource) {
+      unfiltered = unfiltered.filter(a => (a.source || 'Unknown') === selectedSource);
+    }
+    if (appliedChips.length > 0) {
+      unfiltered = unfiltered.filter(a => 
+        appliedChips.every(chip => 
+          a.keywords && a.keywords.map(k => k.toLowerCase()).includes(chip.toLowerCase())
+        )
+      );
+    }
+    return filterText 
+      ? unfiltered.filter(a => 
+          a.title?.toLowerCase().includes(filterText.toLowerCase()) || 
+          a.summary?.toLowerCase().includes(filterText.toLowerCase()) || 
+          a.company?.toLowerCase().includes(filterText.toLowerCase()) || 
+          a.keywords?.some(k => k.toLowerCase().includes(filterText.toLowerCase()))
+        )
+      : unfiltered;
+  }, [normalFeed, selectedSource, appliedChips, filterText]);
+
+  const filteredPinnedArticles = React.useMemo(() => {
+    let unfiltered = [...pinnedArticles];
+    if (selectedSource) {
+      unfiltered = unfiltered.filter(a => (a.source || 'Unknown') === selectedSource);
+    }
+    if (appliedChips.length > 0) {
+      unfiltered = unfiltered.filter(a => 
+        appliedChips.every(chip => 
+          a.keywords && a.keywords.map(k => k.toLowerCase()).includes(chip.toLowerCase())
+        )
+      );
+    }
+    return filterText 
+      ? unfiltered.filter(a => 
+          a.title?.toLowerCase().includes(filterText.toLowerCase()) || 
+          a.summary?.toLowerCase().includes(filterText.toLowerCase()) || 
+          a.company?.toLowerCase().includes(filterText.toLowerCase()) || 
+          a.keywords?.some(k => k.toLowerCase().includes(filterText.toLowerCase()))
+        )
+      : unfiltered;
+  }, [pinnedArticles, selectedSource, appliedChips, filterText]);
 
   const sourceCounts = React.useMemo(() => {
     const counts = {};
@@ -590,7 +649,7 @@ export default function App() {
 
   const keywordCounts = React.useMemo(() => {
     const counts = {};
-    currentDataset.forEach(art => {
+    draftDataset.forEach(art => {
       if (art.keywords && Array.isArray(art.keywords)) {
         art.keywords.forEach(kw => {
           counts[kw] = (counts[kw] || 0) + 1;
@@ -598,15 +657,15 @@ export default function App() {
       }
     });
     return counts;
-  }, [currentDataset]);
+  }, [draftDataset]);
 
-  const paginatedFeed = React.useMemo(() => 
-    currentDataset.slice(0, pinnedArticles.length + visibleFeedCount), 
-  [currentDataset, pinnedArticles.length, visibleFeedCount]);
+  const paginatedFeed = React.useMemo(() => {
+    return currentDataset.slice(0, visibleFeedCount);
+  }, [currentDataset, visibleFeedCount]);
 
-  const paginatedSearch = React.useMemo(() => 
-    currentDataset.slice(0, pinnedArticles.length + visibleSearchCount), 
-  [currentDataset, pinnedArticles.length, visibleSearchCount]);
+  const paginatedSearch = React.useMemo(() => {
+    return currentDataset.slice(0, visibleSearchCount);
+  }, [currentDataset, visibleSearchCount]);
   // ------------------------------------
 
   return (
@@ -674,9 +733,6 @@ export default function App() {
             <h1 style={{ fontSize: '1.45rem', lineHeight: 1.1, fontFamily: 'var(--font-title)', color: '#ffffff' }}>
               Dalmia Cement <span style={{ color: '#e2a02b' }}>News Intel Hub</span>
             </h1>
-            <span style={{ fontSize: '0.75rem', color: '#e2e8f0' }}>
-              AI-Powered Competitor & Technology Aggregator
-            </span>
           </div>
         </div>
 
@@ -763,6 +819,7 @@ export default function App() {
 
         <KeywordAutocomplete 
           onSearch={handleSearch} 
+          onApplySearch={handleApplySearch}
           onClear={handleClear} 
           onInputChange={setFilterText}
           isLoading={isLoading || isRefreshing} 
@@ -813,7 +870,7 @@ export default function App() {
           <div className="nav-tabs-container glass-panel animate-fade-in">
             {[
               { id: 'feed', label: 'Home Feed', icon: Newspaper, count: normalFeed.length + pinnedArticles.length },
-              { id: 'search', label: 'Search Results', icon: Search, count: (chips.length > 0 || filterText) ? currentDataset.length : null },
+              { id: 'search', label: 'Search Results', icon: Search, count: (chips.length > 0 || filterText) ? currentDataset.length + filteredPinnedArticles.length : null },
               // Admin tab visible only to administrators
               ...(userRole === 'admin' ? [{ id: 'admin', label: 'Admin Dashboard', icon: Sliders, count: null }] : [])
             ].map((tab) => {
@@ -891,6 +948,14 @@ export default function App() {
               {activeView === 'feed' && (() => {
                 return (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                    {filteredPinnedArticles.length > 0 && (
+                      <div style={{ marginBottom: '1.5rem' }}>
+                        <PinnedSection 
+                          articles={filteredPinnedArticles} 
+                          onTogglePin={handleTogglePin} 
+                        />
+                      </div>
+                    )}
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.5rem' }}>
                       <Newspaper size={18} style={{ color: 'var(--color-primary)' }} />
                       <h2 style={{ fontSize: '1.25rem', fontFamily: 'var(--font-title)' }}>
@@ -967,6 +1032,14 @@ export default function App() {
               {activeView === 'search' && (() => {
                 return (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                    {filteredPinnedArticles.length > 0 && (
+                      <div style={{ marginBottom: '1.5rem' }}>
+                        <PinnedSection 
+                          articles={filteredPinnedArticles} 
+                          onTogglePin={handleTogglePin} 
+                        />
+                      </div>
+                    )}
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.5rem' }}>
                       <Search size={18} style={{ color: 'var(--color-primary)' }} />
                       <h2 style={{ fontSize: '1.25rem', fontFamily: 'var(--font-title)' }}>
@@ -975,7 +1048,7 @@ export default function App() {
                       {(chips.length > 0 || filterText) && (
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', marginLeft: 'auto' }}>
                           <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                            Showing {currentDataset.length} articles
+                            Showing {currentDataset.length + filteredPinnedArticles.length} articles
                           </span>
                           <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontStyle: 'italic', opacity: 0.8 }}>
                             Articles are deduplicated over the previous 7 days.

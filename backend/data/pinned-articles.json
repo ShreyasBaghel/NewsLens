@@ -1,34 +1,433 @@
 [
     {
-        "url": "https://www.firstpost.com/tech/chinas-ai-boom-has-left-nvidia-and-anthropic-on-opposing-sides-14034099.html",
-        "added_at": "2026-07-27 16:44:56",
-        "title": "China's AI boom has left Nvidia and Anthropic on opposing sides",
-        "summary": "China's AI advancements are causing divisions within Silicon Valley, leading to debates on U.S. response regarding access and competition; Anthropic advocates for restrictions due to alleged industrial espionage by Chinese firms.",
+        "url": "https://fake.com/pinned-article",
+        "title": "Pinned Article (no ai)",
+        "keywords": [
+            "other"
+        ]
+    },
+    {
+        "url": "https://fake.com/pinned-article",
+        "title": "Pinned Article (no ai)",
+        "keywords": [
+            "other"
+        ]
+    },
+    {
+        "title": "HiLITE Group's YOO Hub Trivandrum Drives Kerala's IT Growth with 5,000 New Jobs",
+        "url": "https://www.tribuneindia.com/news/business/hilite-groups-yoo-hub-trivandrum-drives-keralas-it-growth-with-5000-new-jobs/",
+        "source": "The Tribune",
+        "published_at": "2026-07-06T11:38:29Z",
+        "summary": "The YOO Hub Trivandrum project by HiLITE Group, valued at Rs. 300 crore and located in Technopark Phase III, is set to create approximately 5,000 direct jobs and significantly enhance Kerala's digital economy; the groundbreaking ceremony was attended by key state dignitaries including P. K. Kunhalikutty, Minister for Industries, IT & AI.",
+        "scraped_content": "Trivandrum (Kerala) [India], July 6: HiLITE Group marked the commencement of its latest project, YOO Hub Trivandrum, at Technopark Phase III with a grand groundbreaking ceremony. As part of the Group's expanding portfolio of developments across the state, this Rs. 300-crore project is set to completely redefine Kerala's technology infrastructure, generating approximately 5,000 direct employment opportunities and significantly boosting the state's digital economy. P. K. Kunhalikutty, Minister for Industries, IT & AI performed the groundbreaking ceremony for the project along with other dignitaries. \"The ground breaking ceremony of HiLITE Group's 'YOO HUB Trivandrum' marks another significant milestone in Kerala's journey as a leading destination for technology and innovation. India's first branded IT workspace, developed in collaboration with 'YOO' at Technopark, reflects the confidence of global brands in our state. This project will create over 5,000 quality jobs and further strengthen Kerala's IT and AI ecosystem. I congratulate HiLITE Group on this landmark initiative and wish them every success,\" said P. K. Kunhalikutty, Minister for Industries, IT & AI. \"YOO Hub Trivandrum represents our commitment to creating world-class infrastructure that empowers businesses, attracts global investment, and generates meaningful employment. Through our partnership with YOO and IWG, we are proud to introduce India's first branded IT Park, reinforcing Kerala's emergence as a leading destination for technology, innovation and enterprise. This is not just a building--it is an investment in the future of our state,\" said P. Sulaiman, Chairman, HiLITE Group. \"The ground breaking ceremony of HiLITE Group's 'YOO HUB Trivandrum' marks a",
+        "keyword": null,
+        "is_pinned": true,
+        "company": null,
+        "relevance_score": 0.344,
+        "canonical_url": null,
+        "keywords": [
+            "India"
+        ],
+        "executive_summary": null,
+        "business_implications": null,
+        "ai_relevance": null,
+        "industry_categories": null,
+        "innovation_score": null,
+        "sentiment": null
+    },
+    {
+        "title": "UK pumps \u00a3708 million into its future fighter jet",
+        "url": "https://www.theregister.com/offbeat/2026/07/23/uk-pumps-708-million-into-its-future-fighter-jet/5276449",
+        "source": "Theregister.com",
+        "published_at": "2026-07-23T09:15:00Z",
+        "summary": "Tempest cash lands alongside hypersonic target contract and BAE's 'loyal wingman' drone reveal Britain has found \u00a3708 million ($946m) to fund the development of advanced technologies for the Royal Air Force\u2019s next-gen fighter, codenamed Tempest. Announced to coincide with the Farnborough International Airshow in Hampshire, southwest of London, the news was accompanied by a \u00a320 million ($27m) contract for a hypersonic target used to test air defenses and a \u201cloyal wingman\u201d drone prototype from BAE Systems.",
+        "scraped_content": "Tempest cash lands alongside hypersonic target contract and BAE's 'loyal wingman' drone reveal Britain has found \u00a3708 million ($946m) to fund the development of advanced technologies for the Royal Air Force\u2019s next-gen fighter, codenamed Tempest. Announced to coincide with the Farnborough International Airshow in Hampshire, southwest of London, the news was accompanied by a \u00a320 million ($27m) contract for a hypersonic target used to test air defenses and a \u201cloyal wingman\u201d drone prototype from BAE Systems. The \u00a3708m extends an existing contract with BAE Systems to develop the UK\u2019s Future Combat Air System (FCAS), part of the Global Combat Air Programme (GCAP) - a tri-partite effort between the UK, Italy and Japan. Britain\u2019s codename for the resulting aircraft is Tempest, as previously disclosed. According to the Ministry of Defence (MoD), the technologies covered by the latest contract include digital engineering capabilities, artificial intelligence and advanced manufacturing support, the latter involving augmented reality, additive manufacturing, and use of robotics. The award follows the recently published Defence Investment Plan, in which the government promised to invest \u00a38.6 billion ($11.5bn) into GCAP over the next four years, on top of more than \u00a35 billion ($6.7bn) already spent on the program. \u201cThis investment in advanced combat air technology for the UK Armed Forces will strengthen our defence and deterrence and shows our clear commitment to backing British workers with our defence investment, creating jobs and supporting communities across the UK,\u201d said newly appointed Defence Secretary, Wes Streeting. The aircraft is expected to enter service",
+        "keyword": null,
+        "is_pinned": true,
+        "company": null,
+        "relevance_score": 0.506,
+        "canonical_url": null,
         "keywords": [
             "Artificial Intelligence",
             "Artificial"
         ],
-        "source": "firstpost",
-        "published_at": "2026-07-27 04:37:27",
+        "executive_summary": null,
+        "business_implications": null,
+        "ai_relevance": null,
+        "industry_categories": null,
+        "innovation_score": null,
+        "sentiment": null
+    },
+    {
+        "title": "Microsoft AI Chief Says OpenAI Hacking Incident Is A 'Warning Shot' For Everyone",
+        "url": "https://www.timesnownews.com/technology-science/microsoft-ai-chief-says-openai-hacking-incident-is-a-warning-shot-for-everyone-article-155191762",
+        "source": "Times Now",
+        "published_at": "2026-07-28T10:25:00Z",
+        "summary": "Microsoft's AI Chief Mustafa Suleyman views OpenAI's recent hacking incident as an urgent wake-up call for cybersecurity in advanced AI systems. He emphasizes the need for careful construction, testing, and monitoring of these powerful tools to prevent similar incidents.",
+        "scraped_content": "Microsoft AI Chief Mustafa Suleyman. (Image Source: Mustafa Suleyman/X) After the recent controversy over an OpenAI AI agent that escaped a controlled testing environment and attacked AI platform Hugging Face, Microsoft has called the incident a major wake-up call for the future of cybersecurity. Microsoft AI CEO Mustafa Suleyman said the episode shows why advanced AI systems must be built, tested and monitored very carefully as they become more powerful. Speaking to the Financial Times, Suleyman said the incident was an 'important lesson' for the entire industry. \"These are very powerful tools and they need to be handled incredibly carefully. And we need extreme attention to detail. The precautionary principle is going to matter here as the models get more and more powerful and I think it\u2019s a warning shot,\" he was quoted as saying. The comments come at a time when concerns around AI-powered cyber attacks are growing. Security experts have warned that advanced AI systems could help hackers discover and exploit software vulnerabilities much faster than before. According to a Financial Times report, fears around AI-assisted cyber threats have increased following the release of more powerful AI models like Mythos, capable of carrying out complex tasks with minimal human intervention. And, the OpenAI incident has further added to concerns over the risks associated with the race to build increasingly capable AI systems. The US-based tech giant, however, believes that AI will also play a crucial role in defending against such threats.",
+        "keyword": null,
         "is_pinned": true,
-        "relevance_score": 2.8,
+        "company": "Microsoft",
+        "relevance_score": 3.357,
+        "canonical_url": null,
+        "keywords": [],
+        "executive_summary": "Microsoft AI Chief Mustafa Suleyman views the OpenAI hacking incident as a critical wake-up call for cybersecurity in advanced AI systems, emphasizing careful construction and monitoring.",
+        "business_implications": [
+            "The need for enhanced cybersecurity measures within AI development processes",
+            "Increased scrutiny on the testing environments of autonomous AI agents to prevent unauthorized access or misuse",
+            "A call for industry-wide vigilance and adherence to best practices in handling advanced AI systems"
+        ],
+        "ai_relevance": "Robotics, Computer Vision (implied through the context of autonomous agents)",
+        "industry_categories": [
+            "Technology",
+            "AI"
+        ],
+        "innovation_score": 85,
+        "sentiment": "Mixed"
+    },
+    {
+        "title": "Why Nvidia's Reported Investment in OpenAI Signals a New Race for AI Computing Dominance",
+        "url": "https://www.devdiscourse.com/article/technology/3955841-why-nvidias-reported-investment-in-openai-signals-a-new-race-for-ai-computing-dominance",
+        "source": "Devdiscourse",
+        "published_at": "2026-07-28T08:46:54Z",
+        "summary": "Nvidia's investment in OpenAI signals a shift towards building competitive advantage through access to computing infrastructure, capital, and energy for AI development. The proposed $250 billion data center project could redefine control over the digital infrastructure powering next-gen AI systems.",
+        "scraped_content": "Nvidia's reported discussions to financially support OpenAI's proposed $250 billion data center project represent more than another large technology investment, they signal a shift in where competitive advantage in artificial intelligence is being built. According to The Wall Street Journal, the project would involve leasing a 10-gigawatt facility developed by SoftBank's energy subsidiary in southern Ohio and could eventually exceed $500 billion in total costs. While Nvidia, OpenAI, and other involved parties have not publicly confirmed the report, the discussions reflect a broader trend in which AI leadership is increasingly determined not only by software innovation but also by access to computing infrastructure, capital, semiconductors, and energy. If the project proceeds, it could reshape how AI companies build, finance, and control the digital infrastructure that powers next-generation AI systems. For OpenAI, the reported project represents a strategic move toward reducing dependence on third-party cloud providers such as Microsoft, Amazon, and Oracle, which currently supply much of its computing infrastructure. As AI models become larger and require exponentially greater computing power, relying solely on external cloud capacity could become both expensive and strategically limiting. A dedicated hyperscale facility would give OpenAI greater control over computing availability, hardware optimization, and long-term operational planning. Instead of competing with other cloud customers for GPU resources, the company could prioritize infrastructure for training increasingly sophisticated AI models while supporting growing demand for AI services. This could also strengthen OpenAI's negotiating position with cloud providers by diversifying its infrastructure portfolio rather than depending on a single",
+        "keyword": null,
+        "is_pinned": true,
         "company": "NVIDIA",
-        "scraped_content": "The rapid rise of Chinese artificial intelligence has sparked an unusual divide inside Silicon Valley, pitting some of the world\u2019s biggest AI developers against one another over how the United States should respond. Until recently, American companies were widely viewed as having an unassailable lead in frontier AI. But a string of increasingly capable Chinese models, including DeepSeek, Z.ai\u2019s GLM 5.2 and Moonshot AI's Kimi K3, has challenged that assumption. Many of these systems have delivered competitive performance while adopting an open-weight approach, allowing developers to download, modify and deploy the models on their own infrastructure. That shift has triggered a broader debate extending beyond technology and into national security, trade policy and intellectual property. At its centre is a simple question: should Washington restrict access to Chinese AI, or should US companies focus on building better alternatives? Anthropic has emerged as one of the strongest advocates for tighter controls. The Claude AI developer argues that several Chinese AI companies have narrowed the performance gap with American rivals not through independent breakthroughs, but by unlawfully extracting knowledge from frontier US models. \u201cWe have identified industrial-scale campaigns by three AI laboratories\u2014DeepSeek, Moonshot, and MiniMax\u2014to illicitly extract Claude\u2019s capabilities to improve their own models,\u201d Anthropic said. According to the company, those organisations generated more than 16 million interactions with Claude using approximately 24,000 fraudulent accounts, allegedly breaching its terms of service and regional access restrictions. The allegations have not been independently verified, and the companies named by Anthropic have not publicly accepted",
-        "validation_relevance_score": 95.0,
-        "llm_insights": null
+        "relevance_score": 3.336,
+        "canonical_url": null,
+        "keywords": [
+            "Artificial Intelligence",
+            "Artificial"
+        ],
+        "executive_summary": "Nvidia's investment in OpenAI is a strategic move towards gaining competitive advantage through access to computing infrastructure, capital, and energy for AI development.",
+        "business_implications": [
+            "The potential shift of control over digital infrastructure powering next-gen AI systems",
+            "A new race in the technology sector focusing on building robust computational resources for AI advancements",
+            "Increased importance of financial backing and strategic partnerships in leading AI research"
+        ],
+        "ai_relevance": "Not specifically mentioned, but implied through infrastructure investment.",
+        "industry_categories": [
+            "Technology",
+            "AI"
+        ],
+        "innovation_score": 90,
+        "sentiment": "Positive"
     },
     {
-        "url": "https://fake.com/pinned-article",
-        "title": "Pinned Article (no ai)",
+        "title": "Nvidia, Microsoft and Palantir launch Open Secure AI Alliance to help defend against AI",
+        "url": "https://techstartups.com/2026/07/27/nvidia-microsoft-and-palantir-launch-open-secure-ai-alliance-to-help-defend-against-ai-powered-cyberattacks-after-hugging-face-hack/",
+        "source": "TechStartups.com",
+        "published_at": "2026-07-27T12:59:59Z",
+        "summary": "The recent cyberattack on Hugging Face has led to an alliance among tech giants like Nvidia, Microsoft, and Palantir for creating open AI security tools through the Open Secure AI Alliance (OSAA). This initiative aims at addressing vulnerabilities in closed AI systems by promoting inspection, modification, and deployment of self-hosted open-weight models.",
+        "scraped_content": "A cyberattack that exposed the limits of closed AI systems has sparked an unusual alliance across the tech industry. Nvidia, Microsoft, Palantir and dozens of leading technology companies on Monday unveiled the Open Secure AI Alliance (OSAA), a new AI safety initiative focused on building open AI security tools after the recent cyberattack on Hugging Face raised fresh questions about how defenders can respond when advanced AI models are locked behind restrictive guardrails. The launch comes just a day after OpenAI and Google joined a growing push for open-weight AI, with Elon Musk backing Nvidia CEO Jensen Huang\u2019s call for American AI leadership. The announcement also arrives at a tense moment for the AI industry. Washington is weighing tighter restrictions on Chinese AI models over intellectual property concerns. At the same time, security researchers and major technology companies are arguing that open-weight AI has become a strategic asset for defending critical infrastructure, software supply chains and enterprise systems. According to Nvidia, the Hugging Face incident exposed a problem many security teams have worried about for months. Closed frontier models were unable to support critical forensic work during the attack, forcing defenders to rely on a self-hosted open-weight model that could be inspected, modified, and deployed without the same restrictions. \u201cOpen source software is a critical pillar of the global economy. It underpins cloud computing, financial services, manufacturing, telecommunications, government and internet services by making technology accessible and observable to communities of experts. Cybersecurity is among the top three beneficiaries of",
+        "keyword": null,
+        "is_pinned": true,
+        "company": "NVIDIA",
+        "relevance_score": 3.172,
+        "canonical_url": null,
         "keywords": [
-            "other"
-        ]
+            "Technology"
+        ],
+        "executive_summary": "The recent cyberattack on Hugging Face has led to the formation of an alliance among tech giants like Nvidia, Microsoft, and Palantir. The Open Secure AI Alliance (OSAA) aims at creating open AI security tools following vulnerabilities exposed in closed systems.",
+        "business_implications": [
+            "The need for self-hosted models to avoid reliance on external platforms",
+            "Increased demand for inspection, modification, and deployment of secure AI solutions within industries",
+            "Potential shift towards open-weight AI as a strategic asset in defending critical infrastructure"
+        ],
+        "ai_relevance": "Robotics, Computer Vision (in the context of cybersecurity)",
+        "industry_categories": [
+            "Technology",
+            "Cybersecurity"
+        ],
+        "innovation_score": 90,
+        "sentiment": "Positive"
     },
     {
-        "url": "https://fake.com/pinned-article",
-        "title": "Pinned Article (no ai)",
+        "title": "Microsoft CEO Satya Nadella Warns Companies Without Their Own AI Will Not Survive",
+        "url": "https://www.timesnownews.com/technology-science/microsoft-ceo-satya-nadella-warns-companies-without-their-own-ai-will-not-survive-article-155189894",
+        "source": "Times Now",
+        "published_at": "2026-07-28T03:23:35Z",
+        "summary": "Microsoft CEO Satya Nadella has cautioned businesses relying on external AI platforms about their long-term survival, emphasizing that companies must own and control critical information shared with these providers. He advocates for firms to retain metadata from everyday AI usage as a foundation to develop proprietary AI solutions.",
+        "scraped_content": "Microsoft CEO Satya Nadella\u2019s Big AI Warning: Firms Must Own Their AI Future To Survive (Image credit: AI-generated) Microsoft CEO Satya Nadella has once again issued a warning for businesses relying on a single AI platform. Speaking on CNN\u2019s Fareed Zakaria GPS podcast, Nadella said that companies that depend on AI model providers may struggle to survive in the long run. He stressed that businesses must carefully handle critical information, including their data, prompts, and other AI usage details, shared with external AI companies. During the interview, host Fareed Zakaria asked Nadella how companies can avoid sharing too much data with AI model providers. Nadella said businesses must ensure that they retain the crucial information generated while using AI models. This includes metadata related to how employees interact with AI systems, which may later help companies develop their own AI solutions. He said, \u201cEvery time you use the model, all of the metadata around it is retained by you, so that you could use all of that to train perhaps your own weights or your own open model.\u201d For those who do not know, weights in AI refer to the learned parameters that help a model to generate responses and perform tasks. Nadella suggests that companies should not allow AI providers to become the sole owners of valuable insights created through everyday AI usage. \u201cAny firm that doesn\u2019t have this control, I will claim will not remain a firm because you\u2019ve essentially outsourced your thinking,\u201d warned Nadella. He believes that",
+        "keyword": null,
+        "is_pinned": true,
+        "company": "Microsoft",
+        "relevance_score": 2.979,
+        "canonical_url": null,
         "keywords": [
-            "other"
-        ]
+            "Information"
+        ],
+        "executive_summary": "Microsoft CEO Satya Nadella warns that companies relying on external AI platforms may face survival challenges. He emphasizes the importance of retaining metadata to develop proprietary solutions.",
+        "business_implications": [
+            "The necessity for businesses to own and control critical information shared with third-party providers",
+            "Encouragement towards developing in-house AI capabilities using retained data",
+            "Shift from external dependency on AI models to self-sufficiency"
+        ],
+        "ai_relevance": "Data Retention and Management for Proprietary Model Development",
+        "industry_categories": [
+            "Technology",
+            "Business Strategy"
+        ],
+        "innovation_score": 85,
+        "sentiment": "Neutral"
+    },
+    {
+        "title": "OpenAI CEO Sam Altman Says Humanity Has Entered The AI Singularity: What It Means",
+        "url": "https://www.timesnownews.com/technology-science/openai-ceo-sam-altman-says-humanity-has-entered-the-ai-singularity-what-it-means-article-155185709",
+        "source": "Times Now",
+        "published_at": "2026-07-27T07:00:41Z",
+        "summary": "OpenAI CEO Sam Altman believes humanity has entered an AI singularity, where intelligent systems can improve themselves autonomously. This moment represents a significant shift in the capabilities of artificial intelligence that was once considered improbable.",
+        "scraped_content": "Not everyone in the AI industry agrees that the singularity has already arrived. OpenAI CEO Sam Altman believes the world has entered what many AI researchers have debated for decades -- the 'AI singularity.' Speaking on the 'How to Start a Startup' podcast hosted by Ti Morse, Altman said humanity is now living through a moment that once felt like a distant dream for people working in artificial intelligence. Replying to a question about what motivates him and how tech leaders think differently today compared to a decade ago, he replied: \"The thing that drives me the most is\u2026this is the most interesting important thing I can imagine doing and we are now in the singularity, this is the moment \u2026.10 years ago this was like a far off dream at best. It seemed very improbable and now we\u2019re actually in the moment that we used to talk about at the lunch table in a very not serious way.\" The term 'singularity' refers to a theoretical point where AI becomes so advanced that it can improve itself without regular human involvement. To simply put, AI systems can now become smarter by creating even better versions of themselves which can lead to rapid progress that may be difficult for humans to fully understand or predict. For years, the idea of the singularity has mostly been discussed in research papers and science fiction. There is still no universally accepted definition, but it is generally linked to AI becoming more intelligent than humans",
+        "keyword": null,
+        "is_pinned": true,
+        "company": "OpenAI",
+        "relevance_score": 2.84,
+        "canonical_url": null,
+        "keywords": [
+            "Artificial Intelligence",
+            "Artificial"
+        ],
+        "executive_summary": "OpenAI CEO Sam Altman asserts that humanity has entered the AI singularity, a point where intelligent systems can autonomously improve themselves. This marks a significant shift in artificial intelligence capabilities.",
+        "business_implications": [
+            "The need for businesses to adapt quickly to rapidly advancing AI technologies",
+            "Potential reevaluation of long-term strategies considering the accelerated pace of AI development",
+            "Increased importance in understanding and preparing for self-improving AI systems"
+        ],
+        "ai_relevance": "Self-Improvement Algorithms within Artificial Intelligence",
+        "industry_categories": [
+            "Technology",
+            "Future of Work"
+        ],
+        "innovation_score": 95,
+        "sentiment": "Mixed"
+    },
+    {
+        "title": "What is Open Secure AI Alliance? Nvidia\u2019s latest push for AI security",
+        "url": "https://indianexpress.com/article/technology/artificial-intelligence/nvidia-launches-open-secure-ai-alliance-what-it-means-10806588/",
+        "source": "The Indian Express",
+        "published_at": "2026-07-28T03:58:10Z",
+        "summary": "Nvidia announced the Open Secure AI Alliance to develop and share tools for AI safety and cybersecurity, in response to concerns highlighted by a recent security incident involving autonomous AI systems. The coalition includes over 35 partners from various sectors aiming to create transparent models that allow inspection of their inner workings.",
+        "scraped_content": "Amid the ongoing debate around open-weight AI models, Nvidia on Monday, July 27, announced the launch of the Open Secure AI Alliance, a coalition of technology companies that will develop and share tools for AI safety and cybersecurity. The announcement comes days after the Hugging Face security incident involving OpenAI-linked AI agents, which renewed concerns over the risks posed by autonomous AI systems. The alliance launches with more than 35 inaugural partners spanning AI, cybersecurity, enterprise software, cloud computing and open-source technologies. Nvidia was also among 25 technology companies that recently signed an open letter urging the US administration to reconsider its stance on open-weight AI models. The coalition aims to build and share open AI tools that strengthen software and digital infrastructure. Its members include NVIDIA, Microsoft, IBM, Cisco, Dell Technologies, Adobe, CrowdStrike, Palo Alto Networks, Salesforce, SAP, the Linux Foundation, Hugging Face and dozens of other organisations working across enterprise technology, cybersecurity and AI research. The core argument of the alliance is simple. Cyber defenders need AI systems whose inner workings can be inspected instead of opaque black-box models. The reasoning is that closed models, no matter how advanced and capable, cannot always distinguish between an attacker and a defender investigating their own systems. This ambiguity is often getting in the way when speed matters the most. Perhaps the biggest driver of the alliance is the recent Hugging Face security incident. When closed AI tools prevented the investigation of a security breach, Hugging Face used an open-weight model",
+        "keyword": null,
+        "is_pinned": true,
+        "company": "NVIDIA",
+        "relevance_score": 3.284,
+        "canonical_url": null,
+        "keywords": [
+            "Technology"
+        ],
+        "executive_summary": "This article discusses key industrial developments and technological advancements in the sector.",
+        "business_implications": [
+            "Provides insights into operational improvements and potential efficiency gains.",
+            "Highlights automation and digital transformation opportunities.",
+            "Illustrates market dynamics and competitor strategies in the industry."
+        ],
+        "ai_relevance": "Not AI-focused",
+        "industry_categories": [
+            "Manufacturing"
+        ],
+        "innovation_score": 50,
+        "sentiment": "Neutral"
+    },
+    {
+        "title": "Sam Altman, Satya Nadella, Sundar Pichai, Elon Musk and Jensen Huang unite behind one AI vision: Why America's biggest tech billionaires are calling for open-weight AI models",
+        "url": "https://economictimes.indiatimes.com/news/international/global-trends/sam-altman-satya-nadella-sundar-pichai-elon-musk-and-jensen-huang-unite-behind-one-ai-vision-why-americas-biggest-tech-billionaires-are-calling-for-open-weight-ai-models/articleshow/132659597.cms",
+        "source": "The Economic Times",
+        "published_at": "2026-07-27T11:08:00Z",
+        "summary": "first_sentence A coalition of tech giants including Sam Altman, Satya Nadella, Sundar Pichai, Jensen Huang and Elon Musk advocates for open-weight AI models to maintain America's leadership in artificial intelligence. second_sentence Their letter has been endorsed by these influential figures as a call to action for US policymakers.",
+        "scraped_content": "A coalition of 25 leading technology companies and organizations has urged US policymakers to support open-weight AI models, arguing they are essential for maintaining America's leadership in artificial intelligence. The letter has received backing from OpenAI CEO Sam Altman, Microsoft CEO Satya Nadella, Google CEO Sundar Pichai, Nvidia CEO Jensen Huang, and Elon Musk. Quote of the Day by Ramon Llull: \u2018Man is nobler for his knowledge than for the gold and goods he possesses, even though these be\u2026\u2019 Timeless wisdom by Catalan poet Quote of the Day by Oscar Wilde: \u2018To love oneself is the beginning of a...\u2019 Irish poet's powerful wisdom on self worth and compassion Quote of the Day by Albert Einstein: \u2018I have no special talent, I am only\u2026\u2019; Nobel Prize winning scientist\u2019s timeless wisdom on curiosity and talent Quote of the Day by Mother Teresa: \u2018I alone cannot change the world, but I can cast a stone across the waters to\u2026\u2019 Psychology uncovers why aches and pains feel more intense at night - and why your mind may be making it worse Quote of the day by the Dalai Lama: 'Remember that sometimes not getting what you want is a wonderful...' - The timeless wisdom behind accepting what wasn't meant for you Dollarama recalls Heavenly Spices garlic powder across Canada over bacterial contamination that can cause diarrhea and vomiting",
+        "keyword": null,
+        "is_pinned": true,
+        "company": "Microsoft",
+        "relevance_score": 1.161,
+        "canonical_url": null,
+        "keywords": [
+            "Artificial Intelligence",
+            "Artificial"
+        ],
+        "executive_summary": "Tech billionaires Sam Altman, Satya Nadella, Sundar Pichai, Jensen Huang and Elon Musk advocate for open-weight AI models to maintain America's leadership in artificial intelligence.",
+        "business_implications": [
+            "The coalition of tech leaders underscores the importance of accessible and transparent AI development as a strategic priority for sustaining innovation dominance.",
+            "This advocacy could influence policy decisions, potentially leading to increased funding and support for open-AI initiatives within the United States.",
+            "The united front by these influential figures may accelerate collaboration across industries in adopting AI technologies."
+        ],
+        "ai_relevance": "Computer Vision",
+        "industry_categories": [
+            "Technology"
+        ],
+        "innovation_score": 92,
+        "sentiment": "Positive"
+    },
+    {
+        "title": "Apple briefly becomes second company ever to notch $5 trillion market value",
+        "url": "https://www.oann.com/tech/apple-briefly-becomes-second-company-ever-to-notch-5-trillion-market-value/",
+        "source": "oann",
+        "published_at": "2026-07-28 17:07:21",
+        "summary": "Apple's market capitalization briefly surpassed $5 trillion for the first time, making it only the second company ever to achieve that milestone after Nvidia. The iPhone maker became the most valuable company in the world earlier this month and launched a device leasing program through payments firm Klarna.",
+        "scraped_content": "By ReutersJuly 28, 2026 \u2013 8:02 AM PDT (Reuters) \u2013 Apple\u2019s market capitalization briefly surpassed $5 trillion for the first time on Tuesday, making it only the second company ever to achieve that milestone after Nvidia (NVDA.O). Its shares (AAPL.O) were last \u200bup 0.2% at $337.7, giving it a market capitalization of $4.96 trillion. At a \u200csession high of $342.89, Apple\u2019s market value stood at $5.036 trillion. The iPhone maker became the most valuable company in the world earlier this month, overtaking chip giant Nvidia (NVDA.O) \u2013 which had been at the top since June 2025 \u200band was the first company ever to breach the $5 trillion threshold. For Apple, this \u200byear\u2019s rally has been driven as much by strong demand for its \u2060products as its decision to sit out the AI spending race that is sapping cash \u200bflows at Big Tech rivals. The consumer electronics giant struggled to develop in-house AI models and \u200bhas instead relied on Google\u2019s technology to power new services such as a revamped Siri, avoiding the hefty infrastructure costs that have left Big Tech investors wary of the payoff from surging data-center investments. Its \u200bdecision to hold iPhone prices steady last month when it unveiled increases for MacBooks and \u200biPads has also bolstered demand as buyers scooped up the company\u2019s flagship device ahead of expected price \u200chikes \u2060later this year, analysts have said. To aid demand, Apple on Tuesday also launched a device leasing program in the U.S. through payments firm Klarna (KLAR.N), under which",
+        "keyword": null,
+        "is_pinned": true,
+        "company": "NVIDIA",
+        "relevance_score": 1.3,
+        "canonical_url": null,
+        "keywords": [
+            "Technology"
+        ],
+        "executive_summary": "Apple's market capitalization briefly surpassed $5 trillion, marking a significant milestone in the tech industry and reflecting strong consumer demand for its products.",
+        "business_implications": [
+            "The iPhone maker has become an influential player in setting high-value benchmarks within the technology sector.",
+            "Apple's decision to rely on external AI technologies, like Google\u2019s, instead of developing their own could impact its competitive edge and innovation pace.",
+            "This market achievement may influence other tech companies to prioritize consumer demand over aggressive investment in emerging technology trends."
+        ],
+        "ai_relevance": "Not AI-focused",
+        "industry_categories": [
+            "Technology"
+        ],
+        "innovation_score": 85,
+        "sentiment": "Positive"
+    },
+    {
+        "title": "Perplexity brings its Personal Computer AI agent to Windows",
+        "url": "https://siliconangle.com/2026/07/28/perplexity-brings-personal-computer-ai-agent-windows/",
+        "source": "siliconangle",
+        "published_at": "2026-07-28 17:00:03",
+        "summary": "Perplexity AI Inc. released a Windows version of its Personal Computer, an agentic automation software originally for Macintosh, expanding access to over 1 billion devices and integrating local files with online information from Microsoft 365 and websites through one conversational interface; this move positions Perplexity as an enterprise productivity platform.",
+        "scraped_content": "UPDATED 13:00 EDT / JULY 28 2026 Perplexity AI Inc. today released a Windows version of Personal Computer, expanding its agentic automation software beyond the original Macintosh platform and making it available to more than 1 billion Windows devices. First released in April, Personal Computer software acts as a general-purpose digital worker that can access authorized files and applications on a user\u2019s computer. Users can ask it to create or edit Word documents, update Excel spreadsheets, organize files, conduct online research and complete workflows involving multiple applications. Personal Computer is intended to overcome the inability of many AI assistants to work with information stored locally or operate across the collection of applications that employees use. The Windows version can combine local files and applications with information from Microsoft 365 and websites, allowing users to manage the work through a single conversational interface. \u201cIt\u2019s built for the often messy way enterprise work gets done on local machines,\u201d the company wrote on its blog. Perplexity said the Windows release strengthens the company\u2019s strategy to establish itself as an enterprise productivity platform rather than solely an AI-powered search provider. The company is best known for its flagship search product, which provides rich answers from web searches in paragraph form, including citations. Perplexity is particularly focused on the desktop. A year ago, it introduced a browser aimed at streamlining online research. Last August it made an audacious bid to buy the Chrome browser from Google LLC. The desktop service uses a hybrid architecture rather",
+        "keyword": null,
+        "is_pinned": true,
+        "company": "Microsoft",
+        "relevance_score": 1.3,
+        "canonical_url": null,
+        "keywords": [
+            "Automation",
+            "Information"
+        ],
+        "executive_summary": "Perplexity AI Inc.'s release of a Windows version of its Personal Computer software expands access to over 1 billion devices, integrating local and online information for enhanced productivity.",
+        "business_implications": [
+            "The move positions Perplexity as an enterprise-level automation solution capable of handling complex workflows across various applications.",
+            "This expansion into Windows could significantly increase the company's market share in personal computing and AI services within that ecosystem.",
+            "By offering a conversational interface, Perplexity is setting new standards for user interaction with enterprise software."
+        ],
+        "ai_relevance": "Robotics",
+        "industry_categories": [
+            "Technology"
+        ],
+        "innovation_score": 90,
+        "sentiment": "Positive"
+    },
+    {
+        "title": "Samsung considers Galaxy AI subscription amid rising chip and AI costs",
+        "url": "https://www.livemint.com/companies/news/samsung-galaxy-ai-subscription-memory-chip-costs-smartphone-ai-pricing-11785213758323.html",
+        "source": "Livemint",
+        "published_at": "2026-07-28T08:30:22Z",
+        "summary": "Samsung is considering implementing a monthly Galaxy AI subscription to recoup costs from rising memory chip prices and ongoing expenses of running AI services, particularly for heavy users. This strategy aligns with the industry's shift towards treating AI as an essential service rather than just a hardware feature.",
+        "scraped_content": "This is a Mint Premium article gifted to you.Subscribe to enjoy similar stories. LONDON: Samsung is preparing to test whether consumers will pay for artificial intelligence (AI) on smartphones as soaring memory chip prices and the rising cost of running AI services squeeze margins. The company is considering a monthly subscription for users who rely heavily on Galaxy AI as it looks to offset those costs, Samsung Southwest Asia president and chief executive JB Park said. The move reflects a broader shift in the smartphone industry, where AI is becoming a recurring service rather than just a hardware differentiator, with ongoing computing costs. \u201cGalaxy AI features are free for consumers, but they are a huge cost for Samsung even though they might involve on-device features like Photo Editing. AI features require huge computing power,\u201d Park told reporters at a media roundtable ahead of the launch of its eighth generation of foldable phones last week. Tokens are the basic units of text, such as words, parts of words or punctuation, that an AI model processes to understand a prompt and generate a response. Advanced AI features rely on cloud servers that process users' requests. The more text or data the AI processes, the higher the computing cost. \"...what we are trying and have learnt in the past few years is there are some consumers who are heavy users on editing part and it requires us to invest more on the data centre or the computing on a GPU (graphic processing unit)",
+        "keyword": null,
+        "is_pinned": true,
+        "company": null,
+        "relevance_score": 0.833,
+        "canonical_url": null,
+        "keywords": [
+            "Artificial Intelligence",
+            "Artificial"
+        ],
+        "executive_summary": "Samsung is exploring a Galaxy AI subscription model to manage rising costs of memory chips and ongoing expenses for running AI services, particularly benefiting heavy users.",
+        "business_implications": [
+            "Adapting pricing models to include recurring revenue from subscriptions",
+            "Reassessment of cost structures due to fluctuating memory chip prices and operational costs for AI services",
+            "Potential shift in consumer perception towards treating advanced features as essential, not just add-ons"
+        ],
+        "ai_relevance": "Robotics (not directly mentioned but implied through the context of ongoing computing costs), Computer Vision (inferred from Photo Editing feature)",
+        "industry_categories": [
+            "Consumer Electronics",
+            "AI Services"
+        ],
+        "innovation_score": 75,
+        "sentiment": "Positive"
+    },
+    {
+        "title": "Verizon Stock Pulls Back: Record Margins and Google Dark Fiber Deal Signal New Era",
+        "url": "https://www.techtimes.com/articles/321821/20260728/verizon-stock-pulls-back-record-margins-google-dark-fiber-deal-signal-new-era.htm",
+        "source": "techtimes",
+        "published_at": "2026-07-28 16:46:58",
+        "summary": "Verizon Communications reported its highest adjusted EBITDA margin in history and announced a $1.05 billion dark fiber deal with Google, leading to a significant stock surge; despite Monday's slight premarket dip, analysts see potential for continued growth as Verizon expands into AI infrastructure.",
+        "scraped_content": "Verizon Communications (NYSE: VZ) shares dipped in Monday morning trading on July 28, pulling back slightly after their strongest single-session gain of the year on July 24 \u2014 when the telecom giant reported its highest adjusted EBITDA margin in company history and announced a landmark dark fiber deal with Google valued at more than $1 billion. A fresh Morningstar research note, published July 27, puts VZ's fair value at $54, implying double-digit upside from current prices \u2014 and frames the company's AI infrastructure push as just getting started. VZ fell roughly 0.37% in Monday premarket trading, a routine cooling-off after a 5.84% surge on July 24 that carried the stock from $43.82 to $46.38. Year to date, Verizon has now gained approximately 22%, quietly outperforming the broader market during a period when tech valuations remain elevated and income investors are searching for yield. Monday's slight retreat reflects normal profit-taking, not a reassessment of the thesis. The real story is what drove Friday's surge in the first place. Read more: Verizon Cuts 16,600 Jobs in Nine Months as Its AI Stack Nears Completion The stock's Monday retreat follows one of the more eventful single weeks in VZ's recent trading history. The 5.84% surge on July 24 was the stock's best single-session performance of the year, driven by a combination of record operating results and the surprise dark fiber announcement. Investors who had been waiting for evidence that CEO Dan Schulman's transformation strategy was translating into financial results got a data-rich answer",
+        "keyword": null,
+        "is_pinned": true,
+        "company": null,
+        "relevance_score": 0.8,
+        "canonical_url": null,
+        "keywords": [],
+        "executive_summary": "Despite a slight pullback, Verizon's record margins and the $1.05 billion dark fiber deal with Google indicate robust growth potential as it invests in AI infrastructure.",
+        "business_implications": [
+            "Strengthening of strategic partnerships to enhance network capabilities",
+            "Investment into expanding AI and cloud services, signaling a shift towards more intelligent networking solutions",
+            "Potential for Verizon's stock growth as it capitalizes on its high-margin position"
+        ],
+        "ai_relevance": "Cloud Computing (implied through the dark fiber deal with Google and AI infrastructure investment)",
+        "industry_categories": [
+            "Telecommunications",
+            "AI Infrastructure"
+        ],
+        "innovation_score": 85,
+        "sentiment": "Positive"
+    },
+    {
+        "title": "You Cannot Protect What You Cannot See: A Cybersecurity Company Just Built a Map for the Encryption Hiding Inside Your Business",
+        "url": "https://investingnews.com/you-cannot-protect-what-you-cannot-see-a-cybersecurity-company-just-built-a-map-for-the-encryption-hiding-inside-your-business/",
+        "source": "investingnews",
+        "published_at": "2026-07-28 16:35:35",
+        "summary": "Quantum Secure Encryption Corp has developed QSE QScope, a tool to discover and organize encryption across an organization's systems. The market is racing towards quantum computing threats, making system visibility crucial for securing cryptographic assets.",
+        "scraped_content": "Issued on behalf of Quantum Secure Encryption Corp. (CSE: QSE) (OTCQB: QSEGF) (FSE: VN80) American News Group News Commentary - Ask a large enterprise a deceptively simple question, where is your cryptography, and most cannot answer it. Encryption is buried across servers, applications, cloud systems, certificates, network devices, APIs and third-party software, often invisible to the very teams responsible for securing it. That blind spot is about to become a serious liability, because the entire foundation of digital encryption is on a countdown toward a quantum-computing reckoning, and the first step to surviving it is simply seeing what you have. Quantum Secure Encryption Corp. (CSE: QSE) (OTCQB: QSEGF) (FSE: VN80) just moved to close that gap. The post-quantum cybersecurity company introduced QSE QScope, a cryptographic discovery and CBOM intelligence tool designed to automatically find and organize the encryption used across an organization's systems. In a market racing toward a hard migration deadline, QScope targets the one problem every enterprise has to solve first: visibility. Cryptography is the quiet machinery of modern business. It protects logins, payments, medical records, contracts, communications and the connections between systems. It is also, in most large organizations, undocumented. Nobody keeps a running inventory of every algorithm, certificate, key and library in use, and so nobody has a complete picture of what protects the business or where that protection is weakest. QScope is built to answer that. A CBOM, or Cryptographic Bill of Materials, is essentially a list of the encryption inside an organization. QScope is",
+        "keyword": null,
+        "is_pinned": true,
+        "company": null,
+        "relevance_score": 0.8,
+        "canonical_url": null,
+        "keywords": [],
+        "executive_summary": "Quantum Secure Encryption Corp's QSE QScope addresses the critical need for visibility in encryption across organizational systems, positioning itself as a key player against quantum computing threats.",
+        "business_implications": [
+            "Enhanced security postures through better management of cryptographic assets",
+            "Increased demand for cybersecurity solutions that offer transparency and control over encryption practices",
+            "Potential market growth as businesses seek to secure their digital infrastructure against emerging quantum threats"
+        ],
+        "ai_relevance": "Not AI-focused, but the tool's automation aspect suggests a blend of cybersecurity and artificial intelligence for system management.",
+        "industry_categories": [
+            "Cybersecurity",
+            "Quantum Computing"
+        ],
+        "innovation_score": 90,
+        "sentiment": "Positive"
+    },
+    {
+        "title": "Nvidia behind $50 billion lease on Texas data center, FT reports",
+        "url": "https://economictimes.indiatimes.com/tech/technology/nvidia-behind-50-billion-lease-on-texas-data-center-ft-reports/articleshow/132676392.cms",
+        "source": "The Economic Times",
+        "published_at": "2026-07-28T05:52:38Z",
+        "summary": "Nvidia is set to lease Hut 8's Texas data center for potentially up to $50 billion, aimed at enhancing AI training and operations. The company plans to sublease parts of the facility using DSX architecture to its cloud computing partners.",
+        "scraped_content": "Business NewsTechTech & Internet Nvidia behind $50 billion lease on Texas data center, FT reports ReutersLast Updated: Jul 28, 2026, 11:22:38 AM IST In an impressive move, Nvidia is reportedly set to lease Hut 8's data center in Texas, with the value of the arrangement potentially soaring to fifty billion dollars in the future. This state-of-the-art campus is designed to facilitate extensive artificial intelligence training and operations. Moreover, Nvidia is expected to sublease parts of the facility to its cloud computing allies, significantly advancing their AI infrastructure through the cutting-edge DSX architecture. Listen to this article in summarized format Add as a Reliable and Trusted News Source Nvidia Texas data center leaseHut 8 data centerAI infrastructure$50 billion leaseneocloud partnersDSX AI factory architecturedata center tenantlarge-scale AI trainingAI cloud computingdata center contract value (Catch all the Technology News News, and Latest News Updates on The Economic Times.) Elevate your knowledge and leadership skills at a cost cheaper than your daily tea.",
+        "keyword": null,
+        "is_pinned": true,
+        "company": null,
+        "relevance_score": 0.504,
+        "canonical_url": null,
+        "keywords": [
+            "Artificial Intelligence",
+            "Artificial"
+        ],
+        "executive_summary": "This article discusses key industrial developments and technological advancements in the sector.",
+        "business_implications": [
+            "Provides insights into operational improvements and potential efficiency gains.",
+            "Highlights automation and digital transformation opportunities.",
+            "Illustrates market dynamics and competitor strategies in the industry."
+        ],
+        "ai_relevance": "Not AI-focused",
+        "industry_categories": [
+            "Manufacturing"
+        ],
+        "innovation_score": 50,
+        "sentiment": "Neutral"
     }
 ]

@@ -2,7 +2,7 @@ import React from 'react';
 import ArticleCard from './ArticleCard';
 import { Zap } from 'lucide-react';
 
-export default function PinnedSection({ articles }) {
+export default function PinnedSection({ articles, onTogglePin }) {
   if (!articles || articles.length === 0) return null;
 
   return (
@@ -49,7 +49,7 @@ export default function PinnedSection({ articles }) {
         }}
       >
         {articles.map((article, idx) => (
-          <ArticleCard key={`pinned-${idx}`} article={article} />
+          <ArticleCard key={`pinned-${idx}`} article={article} onTogglePin={onTogglePin} />
         ))}
       </div>
     </div>

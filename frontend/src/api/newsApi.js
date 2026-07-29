@@ -2,6 +2,8 @@ const API_BASE_URL =
   (import.meta.env && (import.meta.env.VITE_API_URL || import.meta.env.REACT_APP_API_URL)) || 
   'http://localhost:8000/api';
 
+let requestCounter = 0;
+
 /**
  * Gets the authorization role header from localStorage.
  * @returns {object} headers object containing X-User-Role

@@ -5,12 +5,19 @@ const API_BASE_URL =
   (import.meta.env && (import.meta.env.VITE_API_URL || import.meta.env.REACT_APP_API_URL)) || 
   'http://localhost:8000/api';
 
-export default function KeywordAutocomplete({ onSearch, onClear, onInputChange, isLoading, chips = [], setChips, keywordCounts = {} }) {
+export default function KeywordAutocomplete({ onSearch, onApplySearch, onClear, onInputChange, isLoading, chips = [], setChips, keywordCounts = {} }) {
   const [inputValue, setInputValue] = useState('');
   const [allTags, setAllTags] = useState([]);
   const [showPopup, setShowPopup] = useState(false);
   const popupRef = useRef(null);
   const inputRef = useRef(null);
+
+  const submitSearch = () => {
+    if (onApplySearch) {
+      onApplySearch(chips.join(','));
+    }
+    setShowPopup(false);
+  };
 
   // Fetch or derive all keywords for the grid on focus / startup
   useEffect(() => {
@@ -48,29 +55,20 @@ export default function KeywordAutocomplete({ onSearch, onClear, onInputChange, 
     if (kw) {
       const newChips = chips.includes(kw) ? chips : [...chips, kw];
       setChips(newChips);
-      onSearch(newChips.join(','));
     }
     setInputValue('');
     if (onInputChange) onInputChange('');
-    setShowPopup(false);
   };
 
   const handleRemoveChip = (chipToRemove) => {
     const updated = chips.filter(c => c !== chipToRemove);
     setChips(updated);
-    if (updated.length === 0) {
-      onClear();
-    } else {
-      onSearch(updated.join(','));
-    }
   };
 
   const handleClearAll = () => {
     setChips([]);
     setInputValue('');
     if (onInputChange) onInputChange('');
-    setShowPopup(false);
-    onClear();
   };
 
   // Filter tags in real-time as user types
@@ -164,9 +162,13 @@ export default function KeywordAutocomplete({ onSearch, onClear, onInputChange, 
               if (e.key === 'Backspace' && !inputValue && chips.length > 0) {
                 e.preventDefault();
                 handleRemoveChip(chips[chips.length - 1]);
-              } else if (e.key === 'Enter' && inputValue.trim()) {
+              } else if (e.key === 'Enter') {
                 e.preventDefault();
-                handleSelectKeyword(inputValue);
+                if (inputValue.trim()) {
+                  handleSelectKeyword(inputValue);
+                } else {
+                  submitSearch();
+                }
               }
             }}
             placeholder={chips.length === 0 ? "Click to search tags or type to filter..." : "Add search filters..."}
@@ -209,6 +211,34 @@ export default function KeywordAutocomplete({ onSearch, onClear, onInputChange, 
               <X size={18} />
             </button>
           )}
+
+          {/* Apply Search Button */}
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              submitSearch();
+            }}
+            disabled={isLoading}
+            style={{
+              background: 'var(--color-primary)',
+              color: '#fff',
+              border: 'none',
+              padding: '0.5rem 1rem',
+              borderRadius: '100px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.4rem',
+              fontSize: '0.9rem',
+              fontWeight: 600,
+              boxShadow: 'var(--shadow-panel)',
+              transition: 'var(--transition-bounce)'
+            }}
+          >
+            <Search size={14} />
+            Search
+          </button>
         </div>
       </div>
 

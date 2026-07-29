@@ -478,7 +478,10 @@ async def _run_pipeline_inner(keyword: Optional[str] = None, force_refresh: bool
         selected_keywords = [k.strip().lower() for k in load_monitored_keywords() if k.strip()]
         
     # Fetch pinned technology articles first so we can extract their domains
+    from app.services.news_fetcher import fetch_official_company_news
+    official_news = await fetch_official_company_news()
     raw_pinned = await fetch_pinned_articles()
+    raw_pinned.extend(official_news)
     pinned_domains = [getNormalizedDomain(art["url"]) for art in raw_pinned if art.get("url")]
     
     # 2. Query local pool
@@ -728,17 +731,23 @@ async def _run_pipeline_inner(keyword: Optional[str] = None, force_refresh: bool
             
             # Try to find real pinned articles first (round-robin)
             # Loop multiple times if needed to find enough candidates
-            for attempt in range(5):
-                if len(summarized_pinned) >= 5:
+            for attempt in range(15):
+                if len(summarized_pinned) >= 15:
                     break
                 for company in companies:
-                    if len(summarized_pinned) >= 5:
+                    if len(summarized_pinned) >= 15:
                         break
                     # Find candidates for this company
-                    matching = [a for a in raw_pinned if a.get("company") == company and a["url"] not in seen_pinned_urls]
+                    matching = [a for a in raw_pinned if a.get("company") == company or a.get("source") == company]
+                    matching = [a for a in matching if a["url"] not in seen_pinned_urls]
                     if matching:
                         cand = matching[0]
                         seen_pinned_urls.add(cand["url"])
+                        
+                        # Add company attribute if missing
+                        if "company" not in cand:
+                            cand["company"] = cand.get("source")
+                            
                         val_art = await process_and_validate_candidate(
                             cand, keyword="", is_pinned=True, client=client, semaphore=semaphore,
                             stats=stats, scrape_times=scrape_times, relevance_times=relevance_times,
@@ -749,14 +758,14 @@ async def _run_pipeline_inner(keyword: Optional[str] = None, force_refresh: bool
                             add_seen_url(cand["url"], title=val_art.get("title"), published_at=val_art.get("published_at"))
                             
             # If pinned shortfall exists, backfill with mock pinned articles
-            if len(summarized_pinned) < 5:
-                logger.info(f"Pinned articles shortfall ({len(summarized_pinned)}/5). Backfilling with mock pinned articles.")
+            if len(summarized_pinned) < 15:
+                logger.info(f"Pinned articles shortfall ({len(summarized_pinned)}/15). Backfilling with mock pinned articles.")
                 mock_candidates = _generate_mock_pinned()
-                for attempt in range(5):
-                    if len(summarized_pinned) >= 5:
+                for attempt in range(15):
+                    if len(summarized_pinned) >= 15:
                         break
                     for company in companies:
-                        if len(summarized_pinned) >= 5:
+                        if len(summarized_pinned) >= 15:
                             break
                         matching = [a for a in mock_candidates if a.get("company") == company and a["url"] not in seen_pinned_urls]
                         if matching:

@@ -164,6 +164,7 @@ export default function Sidebar({
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
                   {groupings[groupKey].map(kw => {
                     const isSelected = selectedSource === kw.name;
+                    const isOfficial = ["Nvidia", "OpenAI", "Microsoft"].includes(kw.name);
                     return (
                       <button
                         key={kw.name}
@@ -177,10 +178,10 @@ export default function Sidebar({
                           borderRadius: '6px',
                           border: isSelected ? '1px solid var(--color-secondary)' : '1px solid transparent',
                           background: isSelected 
-                            ? 'linear-gradient(135deg, rgba(226, 160, 43, 0.08) 0%, rgba(226, 160, 43, 0.15) 100%)' 
-                            : 'transparent',
+                            ? 'linear-gradient(135deg, rgba(226, 160, 43, 0.08), rgba(226, 160, 43, 0.15))' 
+                            : (isOfficial ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.04), rgba(16, 185, 129, 0.08))' : 'transparent'),
                           color: isSelected ? 'var(--color-secondary)' : 'var(--text-primary)',
-                          fontWeight: isSelected ? 700 : 500,
+                          fontWeight: isSelected ? 700 : (isOfficial ? 600 : 500),
                           fontSize: '0.85rem',
                           fontFamily: 'var(--font-body)',
                           cursor: 'pointer',
@@ -189,20 +190,36 @@ export default function Sidebar({
                         }}
                         onMouseEnter={(e) => {
                           if (!isSelected) {
-                            e.currentTarget.style.background = 'var(--bg-surface-hover)';
+                            e.currentTarget.style.background = isOfficial 
+                              ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.08), rgba(16, 185, 129, 0.12))' 
+                              : 'var(--bg-surface-hover)';
                             e.currentTarget.style.color = 'var(--color-primary)';
                           }
                         }}
                         onMouseLeave={(e) => {
                           if (!isSelected) {
-                            e.currentTarget.style.background = 'transparent';
+                            e.currentTarget.style.background = isOfficial 
+                              ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.04), rgba(16, 185, 129, 0.08))' 
+                              : 'transparent';
                             e.currentTarget.style.color = 'var(--text-primary)';
                           }
                         }}
                       >
                         <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                          <Tag size={12} style={{ color: isSelected ? 'var(--color-secondary)' : 'var(--text-muted)', flexShrink: 0 }} />
-                          {kw.name}
+                          <Tag size={12} style={{ color: isSelected ? 'var(--color-secondary)' : (isOfficial ? '#10b981' : 'var(--text-muted)'), flexShrink: 0 }} />
+                          <span style={{ color: isOfficial && !isSelected ? '#10b981' : 'inherit' }}>{kw.name}</span>
+                          {isOfficial && (
+                             <span style={{
+                               fontSize: '0.6rem',
+                               padding: '0.1rem 0.3rem',
+                               borderRadius: '4px',
+                               background: 'rgba(16, 185, 129, 0.15)',
+                               color: '#10b981',
+                               fontWeight: 700,
+                             }}>
+                               OFFICIAL
+                             </span>
+                          )}
                         </span>
                         <span 
                           style={{
